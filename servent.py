@@ -2,7 +2,7 @@
 # A node that connecet to other servent node through IP address and
 # port number.
 #
-class servent:
+class Servent:
   '''Basic class for the servant'''
   def __init__(self, ip, port, files = []):
     """docstring for __init__"""

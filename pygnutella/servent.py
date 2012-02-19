@@ -3,13 +3,19 @@
 # port number.
 #
 class servent:
-  '''Basic class for the servant'''
+  """
+  Basic class for the servent
+  """
   def __init__(self, ip, port, files = []):
-    """docstring for __init__"""
+    """
+    docstring for __init__
+    """
     self.ip = ip
     self.port = port
     self.files = files
   
   def setFiles(self, files):
-    """docstring for setFiles"""
+    """
+    docstring for setFiles
+    """
     self.files = files

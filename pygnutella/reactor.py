@@ -5,6 +5,10 @@ import socket
 class Reactor:
     def __init__(self, address):
         self.logger = logging.getLogger(__name__)
+        self.acceptor = None
+        self.disconnector = None
+        self.error = None
+        self.receiver = None
         return
     
     def install_handlers(self, acceptor, receiver, disconnector, error):
@@ -14,7 +18,14 @@ class Reactor:
         self.error = error;
         return
     
+    def make_outgoing_connection(self):
+        # TODO implement this method
+        pass
+    
     def run(self):
+        if not (self.acceptor and self.disconnector and self.receiver and self.error):
+            # TODO throw exception here
+            return
         asyncore.loop();
         return
 

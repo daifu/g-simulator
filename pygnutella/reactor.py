@@ -76,4 +76,9 @@ class IncomingConnectionHandler(IConnectionHandler, asyncore.dispatcher):
     def __init__(self, reactor):
         IConnectionHandler.__init__(self, reactor)
         return
+    
+class OutgoingConnectionHandler(IConnectionHandler, asyncore.dispatcher):
+    def __init__(self, reactor):
+        IConnectionHandler.__init__(self, reactor)
+        return
         

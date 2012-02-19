@@ -1,19 +1,21 @@
-# How to run the test:
+How to run the test:
+====================
+
 1. Install nose using setuptools/distribute:
 
->easy_install nose
->pip install nose
+> easy_install nose
+> pip install nose
 
 Or, if you don’t have setuptools/distribute installed, use the download link at right to download(http://pypi.python.org/pypi/nose/) the source package, and install it in the normal fashion: Ungzip and untar the source package, cd to the new directory, and:
->python setup.py install
+> python setup.py install
 
 2. Run the test:
 Go to the main directory, which is under g-simulator/
->nosetests
+> nosetests
 
 3. Naming convention for test files: please make sure all the file names are [class_name]_tests.py, or the test will fail.
 
 4. Import libraries for testing
-for example, testing the message.py:
->from nose.tools import *
->from pygnutella.message import Message
+for example, we want to test message.py file:
+> from nose.tools import *
+> from pygnutella.message import Message

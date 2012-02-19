@@ -3,7 +3,7 @@
 # port number.
 #
 
-class servent:
+class Servent:
     """
     Basic class for the servent
     """

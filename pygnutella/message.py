@@ -3,7 +3,7 @@ import logging
 class Message:
     def __init__(self, ttl = 7, hops = 0):
         self.logger = logging.getLogger(__name__)
-        self.tll = ttl
+        self.ttl = ttl
         self.hops = hops
         self.body = None
         self.payload_length = 0

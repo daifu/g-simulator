@@ -4,6 +4,7 @@ How to run the test:
 1. Install nose using setuptools/distribute:
 
 > easy_install nose
+OR
 > pip install nose
 
 Or, if you don’t have setuptools/distribute installed, use the download link at right to download(http://pypi.python.org/pypi/nose/) the source package, and install it in the normal fashion: Ungzip and untar the source package, cd to the new directory, and:

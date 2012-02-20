@@ -24,19 +24,24 @@ class Servent:
         self.port = port
         self.files = files
         
-    def setFiles(self, files):
+    def set_files(self, files):
         """
         docstring for setFiles
         """
         self.files = files
 
+    def check_file(self, file_id):
+        """
+        check if the servent have the file with id = file_id
+        """
+    
     """** TODO **"""
     """** set and get methods for: hostName/ip, portNum, nums_files_share **"""
     """** and array_of_file_share **"""
     """** 1 more get and set method for something called Reactor (socketPool) **"""
     """** as Howard want **"""
 
-    def CreateMessage(self, peer_id, messageID, message):
+    def create_message(self, peer_id, messageID, message):
         """ TODO (whoever do it is fine)"""
         """ creating a message, not sure if the input argument is enough """
         """ Why pytho don't have switch-case -__- """
@@ -62,19 +67,19 @@ class Servent:
         self.reactor = Reactor(self.ip)
         self.reactor.send(peer_id, message)
         
-    def OnConnect(self, peerID):
+    def on_connect(self, peerID):
         """ TODO (my part)"""
         """ what to do when a servent connect to a network """
 
-    def OnReceive(self, peerID, message):
+    def on_receive(self, peerID, message):
         """ TODO (my part) """
         """ servent behavior when receiving a message """
 
-    def OnDisconnect(self, peerID):
+    def on_disconnect(self, peerID):
         """ TODO (my part) """
         """ servent behavior when leaving the network """
 
-    def OnError(self, peerID):
+    def on_error(self, peerID):
         """ TODO (my part) """
         """ servent behavior when timeout and/or pause message """
 

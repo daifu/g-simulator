@@ -1,12 +1,13 @@
 from nose.tools import *
 from pygnutella.messagebody import *
+from pygnutella.message import Message
 
 def test_PingBody():
-   ping = PingBody('')
-   assert_equal(ping.message, '')
-   #try out the default set method
-   ping.message = 'none'
-   assert_equal(ping.message, 'none')
-
+    message = Message()
+    ping = PingBody(message)
+    assert_equal(ping.message, message)
+    assert_equal(ping.get_length(), 0)
+    assert_equal(ping.serialize(), b'')
+    
 def test_PongBody():
-   #TODO: test pong body
+    #TODO: test pong body

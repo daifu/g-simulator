@@ -38,7 +38,6 @@ class IMessageBody:
 class PingBody(IMessageBody):
     """
     Ping body have no associated payload and are of zero length
-    parameter for message is '' or empty string
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
@@ -58,13 +57,6 @@ class PingBody(IMessageBody):
 class PongBody(IMessageBody):
     """
     Pong body include Port, IP Address, Number of Files Shared, Number of Kilobytes Shared.
-    Example for message dictionary:
-    message = {
-            'port': 3000,
-            'ip_address': '192.168.1.1',
-            'number_of_file_shared': 1,
-            'number_of_kb_shared': 30
-        }
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
@@ -86,16 +78,6 @@ class PongBody(IMessageBody):
 class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
-    Example for message dictionary:
-    message = {
-            'servent_identifier': 'binarystring' # 16 byte string uniquely
-            identifying the servent on the network who is being requested to
-            push the file with index File_Index.
-            'file_index': 'index string' # The index uniquely identifying the
-            file to be pushed from the target servent.
-            'ip_address': '192.168.1.2' # the ip of host should be pushed
-            'port': '3000' # the port of host should be pushed
-        }
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
@@ -117,14 +99,6 @@ class PushBody(IMessageBody):
 class QueryBody(IMessageBody):
     """
     Query body includes minimum speed, search criteria
-    Example of message dictionary:
-    message = {
-            'minimum_speed': '100' # the unit is kB/sec of servents should be
-            respond to this message.
-            'search_criteria': 'something string.\n' # \n is the terminator of
-            the string and the max length of the this string is bounced by
-            payload_length.
-        }
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
@@ -147,29 +121,6 @@ class QueryHitBody(IMessageBody):
     """
     Query hit body includes number of hits, port, ip address, speed, result
     set, servent identifier.
-    Example of message dictionary:
-    message = {
-            'number_of_hits': 2, # the number of query hits in the result set.
-            'port': 3000, # the port number on which the responding host can
-            accept incoming connections.
-            'ip_address': '192.168.1.3', # the ip address of the responding
-            host.
-            'speed': '100', # the unit is in kB/sec of the responding host.
-            'result_set': [
-                {
-                    'file_index': 2,
-                    'file_size': 100,
-                    'file_name': 'the dark night'
-                },
-                {
-                    'file_index': 3,
-                    'file_size': 200,
-                    'file_name': 'dark night, King'
-                }
-            ], # need to add a terminator for the filename, such as \n.
-            'servent_id': 'unique string' # 16 byte sting uniquely identify the
-            responding servent on the network.
-        }
     """
 
     def __init__(self, message):

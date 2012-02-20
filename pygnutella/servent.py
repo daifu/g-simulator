@@ -26,41 +26,43 @@ class Servent:
     # 1 more get and set method for something called Reactor (socketPool)
     # as Howard want
 
-    def create_message(self, peer_id, messageID, message):
+    def create_message(self, peer_id, body_id):
         """ 
         creating a message, not sure if the input argument is enough 
         """
-        # TODO
-        if messageID == GnutellaBodyId.PIND:
+        # Create message
+        message = Message()
+        # Create message body
+        if body_id == GnutellaBodyId.PIND:
             body = PingBody(message)
-        elif messageID == GnutellaBodyId.POND:
+        elif body_id == GnutellaBodyId.POND:
             body = PongBody(message)
-        elif messageID == GnutellaBodyId.QUERY:
+        elif body_id == GnutellaBodyId.QUERY:
             body = QueryBody(message)
-        elif messageID == GnutellaBodyId.QUERYHIT:
+        elif body_id == GnutellaBodyId.QUERYHIT:
             body = QueryHitBody(message)
-        elif messageID == GnutellaBodyId.PUSH:
+        elif body_id == GnutellaBodyId.PUSH:
             body = PushBody(message)
         else:
             return
-        
-        self.message = Message()
-        self.message.setBody(body)
+        # Put body into the message        
+        message.setBody(body)
+        # Send message to peer with peer_id
         self.reactor.send(peer_id, message)
         
     def on_connect(self, peerID):
-        """ TODO (my part)"""
         """ what to do when a servent connect to a network """
+        # TODO
 
     def on_receive(self, peerID, message):
-        """ TODO (my part) """
         """ servent behavior when receiving a message """
+        # TODO
 
     def on_disconnect(self, peerID):
-        """ TODO (my part) """
         """ servent behavior when leaving the network """
+        # TODO
 
     def on_error(self, peerID):
-        """ TODO (my part) """
         """ servent behavior when timeout and/or pause message """
+        # TODO
 

@@ -5,8 +5,16 @@ class IMessageBody:
     This is the interface for all message body in Gnutella network
     """
     def __init__(self, message):
-        self.message = message
         self.logger = logging.getLogger(__name__)
+        self.message = message
+        self.message.set_body(self)
+        return
+    
+    def get_length(self):
+        """
+        Return length in byte of representation of the body
+        """
+        raise NotImplementedError
     
     def serialize(self):
         """
@@ -27,7 +35,12 @@ class PingBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        
+        self.message.set_payload_descriptor(0x00)
+        return
+    
+    def get_length(self):
+        return 0
+    
     def serialize(self):
         return b''
             
@@ -37,8 +50,7 @@ class PingBody(IMessageBody):
     
 class PongBody(IMessageBody):
     """
-    Pong body include Port, IP Address, Number of Files Shared,
-    Number of Kilobytes Shared.
+    Pong body include Port, IP Address, Number of Files Shared, Number of Kilobytes Shared.
     Example for message dictionary:
     message = {
             'port': 3000,
@@ -49,6 +61,12 @@ class PongBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
+        self.message.set_payload_descriptor(0x01)
+        return
+    
+    def get_length(self):
+        # TODO: implement this method
+        pass
         
     def serialize(self):
         # TODO: implement this method
@@ -74,7 +92,13 @@ class PushBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-    
+        self.message.set_payload_descriptor(0x40)
+        return
+
+    def get_length(self):
+        # TODO: implement this method
+        pass
+        
     def serialize(self):
         # TODO: implement this method
         pass
@@ -97,7 +121,13 @@ class QueryBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        
+        self.message.set_payload_descriptor(0x80)
+        return
+
+    def get_length(self):
+        # TODO: implement this method
+        pass
+            
     def serialize(self):
         # TODO: implement this method
         pass
@@ -134,9 +164,16 @@ class QueryHitBody(IMessageBody):
             responding servent on the network.
         }
     """
+
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        
+        self.message.set_payload_descriptor(0x81)
+        return
+
+    def get_length(self):
+        # TODO: implement this method
+        pass
+                    
     def serialize(self):
         # TODO: implement this method
         pass

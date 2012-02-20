@@ -65,7 +65,7 @@ class Gnutella4Handshake(IHandShake):
             self.__buffer += self.handler.recv(chunk_size)
             if len(self.__welcome) == len(self.__buffer):
                 if self.__buffer == self.__welcome:
-                    self.handler.send('GNUTELLA OK\n\n')
+                    self.handler.send(self.__response)
                     # TODO: add Servent to add capability of refusing connection
                     self.__complete = True
                     self.__success = True

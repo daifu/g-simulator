@@ -1,33 +1,19 @@
-# Servent class
-# A node that connecet to other servent node through IP address and
-# port number.
-#
-
-import logging;
-import Reactor;
-
-PIND_ID = 0x00
-POND_ID = 0x01
-QUERY_ID = 0x80
-QUERYHIT_ID = 0x81
-PUSH_ID = 0x40
+import logging
+from reactor import Reactor
+from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
+from message import Message
 
 class Servent:
-    """
-    Basic class for the servent
-    """
     def __init__(self, ip, port, files = []):
-        """
-        docstring for __init__
-        """
+        self.logger = logging.getLogger(__name__)
         self.ip = ip
         self.port = port
         self.files = files
+        self.reactor = Reactor((ip, port))
+        # TODO: fix this
+        self.reactor.install_handlers(None, None, None, None)
         
     def set_files(self, files):
-        """
-        docstring for setFiles
-        """
         self.files = files
 
     def check_file(self, file_id):
@@ -35,36 +21,31 @@ class Servent:
         check if the servent have the file with id = file_id
         """
     
-    """** TODO **"""
-    """** set and get methods for: hostName/ip, portNum, nums_files_share **"""
-    """** and array_of_file_share **"""
-    """** 1 more get and set method for something called Reactor (socketPool) **"""
-    """** as Howard want **"""
+    # TODO
+    # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 
+    # 1 more get and set method for something called Reactor (socketPool)
+    # as Howard want
 
     def create_message(self, peer_id, messageID, message):
-        """ TODO (whoever do it is fine)"""
-        """ creating a message, not sure if the input argument is enough """
-        """ Why pytho don't have switch-case -__- """
-        # this method need to be rechecked, since I just do it by using
-        # the interface provided by other class
-        #
-        #
-        
-        if (messageID = PING_ID):
+        """ 
+        creating a message, not sure if the input argument is enough 
+        """
+        # TODO
+        if messageID == GnutellaBodyId.PIND:
             body = PingBody(message)
-        else if (messageID = PONG_ID):
+        elif messageID == GnutellaBodyId.POND:
             body = PongBody(message)
-        else if (messageID = QUERY_ID):
+        elif messageID == GnutellaBodyId.QUERY:
             body = QueryBody(message)
-        else if (messageID = QUERYHIT_ID):
+        elif messageID == GnutellaBodyId.QUERYHIT:
             body = QueryHitBody(message)
-        else if (messageID = PUSH_ID):
+        elif messageID == GnutellaBodyId.PUSH:
             body = PushBody(message)
-
-        ttl = 7
-        self.message = Message(7, 0)
+        else:
+            return
+        
+        self.message = Message()
         self.message.setBody(body)
-        self.reactor = Reactor(self.ip)
         self.reactor.send(peer_id, message)
         
     def on_connect(self, peerID):

@@ -1,5 +1,12 @@
 import logging
 
+class GnutellaBodyId:
+    PIND = 0x00
+    POND = 0x01
+    QUERY = 0x80
+    QUERYHIT = 0x81
+    PUSH = 0x40
+
 class IMessageBody:
     """
     This is the interface for all message body in Gnutella network

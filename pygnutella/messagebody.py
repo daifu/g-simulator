@@ -42,7 +42,7 @@ class PingBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(0x00)
+        self.message.set_payload_descriptor(GnutellaBodyId.PIND)
         return
     
     def get_length(self):
@@ -68,7 +68,7 @@ class PongBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(0x01)
+        self.message.set_payload_descriptor(GnutellaBodyId.POND)
         return
     
     def get_length(self):
@@ -99,7 +99,7 @@ class PushBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(0x40)
+        self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
         return
 
     def get_length(self):
@@ -128,7 +128,7 @@ class QueryBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(0x80)
+        self.message.set_payload_descriptor(GnutellaBodyId.QUERY)
         return
 
     def get_length(self):
@@ -174,7 +174,7 @@ class QueryHitBody(IMessageBody):
 
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(0x81)
+        self.message.set_payload_descriptor(GnutellaBodyId.QUERYHIT)
         return
 
     def get_length(self):

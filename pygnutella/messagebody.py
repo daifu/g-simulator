@@ -10,15 +10,15 @@ class IMessageBody:
     
     def serialize(self):
         """
-        return a byte array representation of body to send over network socket
+        Return a byte array representation of body to send over network socket
         """
-        pass
+        raise NotImplementedError
     
     def deserialize(self, raw_data):
         """
-        throw exception in deserialize
+        Return either None or NextMessageIndex
         """
-        pass
+        raise NotImplementedError
     
 class PingBody(IMessageBody):
     """
@@ -29,12 +29,11 @@ class PingBody(IMessageBody):
         IMessageBody.__init__(self, message)
         
     def serialize(self):
-        # TODO: implement this method
-        pass
-    
+        return b''
+            
     def deserialize(self, raw_data):
-        # TODO: implement this method
-        pass
+        return 0
+        
     
 class PongBody(IMessageBody):
     """

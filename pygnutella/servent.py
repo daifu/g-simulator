@@ -16,12 +16,16 @@ class Servent:
     def set_files(self, files):
         self.files = files
 
+    def get_files(self, files):
+        return files
+
     def check_file(self, file_id):
         """
         check if the servent have the file with id = file_id
         """
+        # iterate through the file list fo find the file
         for item in files:
-            if (item == file_id):
+            if item == file_id:
                 return True
         return False
     
@@ -38,9 +42,9 @@ class Servent:
         # Create message
         message = Message()
         # Create message body
-        if body_id == GnutellaBodyId.PIND:
+        if body_id == GnutellaBodyId.PING:
             body = PingBody(message)
-        elif body_id == GnutellaBodyId.POND:
+        elif body_id == GnutellaBodyId.PONG:
             body = PongBody(message)
         elif body_id == GnutellaBodyId.QUERY:
             body = QueryBody(message)
@@ -58,12 +62,26 @@ class Servent:
     def on_connect(self, peer_id):
         """ what to do when a servent connect to a network """
         # Servent create and send a ping message
-        create_message(peer_id, GnutellaBodyId.PIND)
+        create_message(peer_id, GnutellaBodyId.PING)
 
     def on_receive(self, peer_id, message):
         """ servent behavior when receiving a message """
-        # TODO
-        
+        if message.get_payload_descriptor() == GnutellaBodyId.PING:
+            # TODO
+            # servent behavior when receiving PING message
+        if message.get_payload_descriptor() == GnutellaBodyId.PONG:
+            # TODO
+            # servent behavior when receiving PONG message
+        if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
+            # TODO
+            # servent behavior when receiving QUERY message
+        if message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
+            # TODO
+            # servent behavior when receiving QUERYHIT message
+        if message.get_payload_descriptor() == GnutellaBodyId.PUSH:
+            # TODO
+            # servent behavior when receiving PUSH message
+            
     def on_disconnect(self, peer_id):
         """ servent behavior when leaving the network """
         # TODO

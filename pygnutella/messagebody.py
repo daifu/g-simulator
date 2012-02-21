@@ -58,9 +58,13 @@ class PongBody(IMessageBody):
     """
     Pong body include Port, IP Address, Number of Files Shared, Number of Kilobytes Shared.
     """
-    def __init__(self, message):
+    def __init__(self, message, ip, port, num_of_files, num_of_kb):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PONG)
+        self.ip = ip
+        self.port = port
+        self.num_of_files = num_of_files
+        self.num_of_kb = num_of_kb
         return
     
     def get_length(self):
@@ -79,9 +83,12 @@ class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
     """
-    def __init__(self, message):
+    def __init__(self, message, ip, port, file_index):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
+        self.ip = ip
+        self.port = port
+        self.file_index = file_index
         return
 
     def get_length(self):
@@ -100,9 +107,11 @@ class QueryBody(IMessageBody):
     """
     Query body includes minimum speed, search criteria
     """
-    def __init__(self, message):
+    def __init__(self, message, min_speed, search_criteria):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.QUERY)
+        self.min_speed = min_speed
+        self.search_criteria = search_criteria
         return
 
     def get_length(self):
@@ -123,9 +132,15 @@ class QueryHitBody(IMessageBody):
     set, servent identifier.
     """
 
-    def __init__(self, message):
+    def __init__(self, message, ip, port, speed, result_set, servent_id, num_of_hits):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.QUERYHIT)
+        self.ip = ip
+        self.port = port
+        self.speed = speed
+        self.result_set = result_set
+        self.servent_id = servent_id
+        self.num_of_hits = num_of_hits
         return
 
     def get_length(self):

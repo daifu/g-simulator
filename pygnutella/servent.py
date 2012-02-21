@@ -12,6 +12,8 @@ class Servent:
         self.reactor = Reactor((ip, port))
         # TODO: fix this
         self.reactor.install_handlers(None, None, None, None)
+        # TODO: create servent id
+        self.id = ''
         
     def set_files(self, files):
         self.files = files
@@ -45,13 +47,33 @@ class Servent:
         if body_id == GnutellaBodyId.PING:
             body = PingBody(message)
         elif body_id == GnutellaBodyId.PONG:
-            body = PongBody(message)
+            # create pong body data
+            ip = self.ip
+            port = self.port
+            num_of_files = 0 # TODO: get the real number
+            num_of_kb = 0 #  TODO: get the real number
+            body = PongBody(message, ip, port, num_of_files, num_of_kb)
         elif body_id == GnutellaBodyId.QUERY:
-            body = QueryBody(message)
+            # create query body data
+            min_speed = 100 # default is 100 kB/sec
+            search_criteria = '' # TODO: get the real string
+            body = QueryBody(message, min_speed, search_criteria)
         elif body_id == GnutellaBodyId.QUERYHIT:
-            body = QueryHitBody(message)
+            # create queryhit body data
+            ip = self.ip
+            port = self.port
+            speed = 100 # default is 100 kB/sec
+            result_set = [] # TODO: create real resut set
+            servent_id = self.id
+            num_of_hits = 0 # TODO: create number of hits
+            body = QueryHitBody(message, ip, port, speed, 
+                                result_set, servent_id, num_of_hits)
         elif body_id == GnutellaBodyId.PUSH:
-            body = PushBody(message)
+            # create push body data
+            ip = self.ip
+            port = self.port
+            file_index = '' # TODO: a index that find the file from the servent
+            body = PushBody(message, ip, port, file_index)
         else:
             return
         # Put body into the message        

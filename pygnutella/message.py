@@ -10,6 +10,8 @@ class Message:
         self.body = None
         self.payload_length = None
         self.payload_descriptor = None
+        # TODO: create message id, a 16 byte unique id
+        # self.id = md5(time + payload_length)
         
     def set_body(self, body):
         self.body = body

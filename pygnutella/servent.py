@@ -24,7 +24,7 @@ class Servent:
         check if the servent have the file with id = file_id
         """
         # iterate through the file list fo find the file
-        for item in files:
+        for item in self.files:
             if item == file_id:
                 return True
         return False
@@ -62,25 +62,30 @@ class Servent:
     def on_connect(self, peer_id):
         """ what to do when a servent connect to a network """
         # Servent create and send a ping message
-        create_message(peer_id, GnutellaBodyId.PING)
+        self.create_message(peer_id, GnutellaBodyId.PING)
 
     def on_receive(self, peer_id, message):
         """ servent behavior when receiving a message """
         if message.get_payload_descriptor() == GnutellaBodyId.PING:
             # TODO
             # servent behavior when receiving PING message
+            pass
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
             # TODO
             # servent behavior when receiving PONG message
+            pass
         if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
             # TODO
             # servent behavior when receiving QUERY message
+            pass
         if message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
             # TODO
             # servent behavior when receiving QUERYHIT message
+            pass
         if message.get_payload_descriptor() == GnutellaBodyId.PUSH:
             # TODO
             # servent behavior when receiving PUSH message
+            pass
             
     def on_disconnect(self, peer_id):
         """ servent behavior when leaving the network """

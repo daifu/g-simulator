@@ -39,6 +39,12 @@ class Servent:
         # TODO
         return self.result_set
 
+    def get_set_peer_id(self)
+        """
+        get a set of peer_id that the servent currently connect to
+        """
+        # TODO
+        return self.peer_id_set
     
     # TODO
     # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 

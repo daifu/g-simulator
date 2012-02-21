@@ -28,7 +28,8 @@ class Servent:
 
     def create_message(self, peer_id, body_id):
         """ 
-        creating a message, not sure if the input argument is enough 
+        creating a message, not sure if the input argument is enough
+        this also send the message after creating it
         """
         # Create message
         message = Message()
@@ -50,19 +51,21 @@ class Servent:
         # Send message to peer with peer_id
         self.reactor.send(peer_id, message)
         
-    def on_connect(self, peerID):
+    def on_connect(self, peer_id):
         """ what to do when a servent connect to a network """
-        # TODO
+        # Servent create and send a ping message
+        create_message(peer_id, GnutellaBodyId.PIND)
 
-    def on_receive(self, peerID, message):
+    def on_receive(self, peer_id, message):
         """ servent behavior when receiving a message """
         # TODO
-
-    def on_disconnect(self, peerID):
+        
+    def on_disconnect(self, peer_id):
         """ servent behavior when leaving the network """
         # TODO
-
-    def on_error(self, peerID):
+        logging.debug(peer_id + ': disconneting from the network\n')
+    
+    def on_error(self, peer_id):
         """ servent behavior when timeout and/or pause message """
         # TODO
-
+        logging.debug(peer_id + ': error occur\n')

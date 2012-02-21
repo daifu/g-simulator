@@ -41,7 +41,7 @@ class PingBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.PIND)
+        self.message.set_payload_descriptor(GnutellaBodyId.PING)
         return
     
     def get_length(self):
@@ -60,7 +60,7 @@ class PongBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.POND)
+        self.message.set_payload_descriptor(GnutellaBodyId.PONG)
         return
     
     def get_length(self):

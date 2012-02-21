@@ -30,6 +30,15 @@ class Servent:
             if item == file_id:
                 return True
         return False
+
+    def get_result_set(self, criteria):
+        """
+        search the file array to file the file with the criteria and put it
+        into result set
+        """
+        # TODO
+        return self.result_set
+
     
     # TODO
     # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 
@@ -50,7 +59,7 @@ class Servent:
             # create pong body data
             ip = self.ip
             port = self.port
-            num_of_files = 0 # TODO: get the real number
+            num_of_files = self.get_files 
             num_of_kb = 0 #  TODO: get the real number
             body = PongBody(message, ip, port, num_of_files, num_of_kb)
         elif body_id == GnutellaBodyId.QUERY:
@@ -88,6 +97,12 @@ class Servent:
 
     def on_receive(self, peer_id, message):
         """ servent behavior when receiving a message """
+
+        """ decrease ttl and increase hop """
+        message.decrease_ttl
+        message.increase_hop
+
+        """ if ttl = 0, the message is "dead", do not need to forward it """
         if message.get_payload_descriptor() == GnutellaBodyId.PING:
             # TODO
             # servent behavior when receiving PING message

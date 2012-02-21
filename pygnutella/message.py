@@ -30,6 +30,13 @@ class Message:
         
     def get_payload_descriptor(self):
         return self.payload_descriptor
+
+    """ 2 helping method """
+    def decrease_ttl(self):
+        ttl = ttl - 1
+
+    def increase_hop(self):
+        hop = hop + 1
     
     def serialize(self):
         self.set_payload_length(self.body.get_length())

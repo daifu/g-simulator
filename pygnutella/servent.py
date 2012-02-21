@@ -20,6 +20,10 @@ class Servent:
         """
         check if the servent have the file with id = file_id
         """
+        for item in files:
+            if (item == file_id):
+                return True
+        return False
     
     # TODO
     # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 

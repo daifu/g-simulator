@@ -39,7 +39,7 @@ class Servent:
         # TODO
         return self.result_set
 
-    def get_set_peer_id(self)
+    def get_peer_id_set(self)
         """
         get a set of peer_id that the servent currently connect to
         """

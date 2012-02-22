@@ -31,6 +31,7 @@ class Servent:
         check if the servent have the file with id = file_id
         """
         # iterate through the file list fo find the file
+        # files is array/dict, w/e of file_id
         for item in self.files:
             if item == file_id:
                 return True

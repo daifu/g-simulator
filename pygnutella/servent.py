@@ -52,13 +52,13 @@ class Servent:
     # 1 more get and set method for something called Reactor (socketPool)
     # as Howard want
 
-    def create_message(self, peer_id, body_id):
+    def create_message(self, peer_id, body_id, ttl, hops, message_id):
         """ 
         creating a message, not sure if the input argument is enough
         this also send the message after creating it
         """
         # Create message
-        message = Message()
+        message = Message(ttl, hops, message_id)
         # Create message body
         if body_id == GnutellaBodyId.PING:
             body = PingBody(message)

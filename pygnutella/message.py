@@ -3,8 +3,9 @@ import hashlib
 import struct
 
 class Message:
-    def __init__(self, ttl = 7, hops = 0):
+    def __init__(self, message_id, ttl = 7, hops = 0):
         self.logger = logging.getLogger(__name__)
+        self.message_id = message_id
         self.ttl = ttl
         self.hops = hops
         self.body = None
@@ -31,6 +32,11 @@ class Message:
     def get_payload_descriptor(self):
         return self.payload_descriptor
 
+    def set_message_id(self, new_id):
+        self.message_id = new_id
+
+    def get_message_id(self):
+        return mself.message_id
     """ 2 helping method """
     def decrease_ttl(self):
         ttl = ttl - 1

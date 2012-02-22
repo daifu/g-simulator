@@ -27,6 +27,7 @@ class Servent:
         check if the servent have the file with id = file_id
         """
         # iterate through the file list fo find the file
+        # files is an array of file_id??
         for item in self.files:
             if item == file_id:
                 return True
@@ -40,7 +41,7 @@ class Servent:
         # TODO
         return self.result_set
 
-    def get_peer_id_set(self)
+    def get_peer_id_set(self):
         """
         get a set of peer_id that the servent currently connect to
         """

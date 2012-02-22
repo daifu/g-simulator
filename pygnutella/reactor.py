@@ -94,6 +94,7 @@ class ServerHandler(asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind(address)
         self.address = self.socket.getsocketname() # TODO: getsocketname() for self.socket
+        self.address = self.socket.getsockname()
         self.logger.debug('ServerHandler binding to %s', self.address)
         self.listen(5)
         return

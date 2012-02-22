@@ -36,7 +36,13 @@ class Message:
         self.message_id = new_id
 
     def get_message_id(self):
-        return mself.message_id
+        return self.message_id
+
+    def get_ttl():
+        return self.ttl
+    def get_hops():
+        return self.hops
+    
     """ 2 helping method """
     def decrease_ttl(self):
         ttl = ttl - 1

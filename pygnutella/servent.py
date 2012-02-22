@@ -4,6 +4,10 @@ from reactor import Reactor
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
 from message import Message
 
+class PingList:
+    peer_id = 0
+    message_id = 0
+    
 class Servent:
     def __init__(self, ip, port, files = []):
         self.logger = logging.getLogger(__name__)
@@ -27,7 +31,6 @@ class Servent:
         check if the servent have the file with id = file_id
         """
         # iterate through the file list fo find the file
-        # files is an array of file_id??
         for item in self.files:
             if item == file_id:
                 return True
@@ -47,6 +50,22 @@ class Servent:
         """
         # TODO
         return self.peer_id_set
+
+    def add_to_ping_list(peer_id, message_id):
+        """
+        add a peer's id that send a ping message to ping_list
+        """
+        # TODO
+        # don't know how array/vector/..w/e in python work
+        # someone should do it
+        
+    def get_ping_list(self):
+        """
+        a list/array of IP and message_id that the servent receive the ping from
+        """
+        # TODO
+        # right now just need a method to make it work
+        return self.ping_list
     
     # TODO
     # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 
@@ -108,10 +127,6 @@ class Servent:
         """ servent behavior when receiving a message """
 
         """ decrease ttl and increase hop """
-        old_ttl = message.get_ttl()
-        old_hops = message.get_hops() 
-        message.decrease_ttl
-        message.increase_hop
         ttl = message.get_ttl()
         hops = message.get_hops()
         message_id = message.get_message_id()
@@ -125,17 +140,24 @@ class Servent:
             get the PING from
                             - respond peer_id with PONG
             """
-            self.create_message(peer_id, GnutellaBodyId.PONG, old_ttl, old_hops, message_id)
+            self.create_message(peer_id, GnutellaBodyId.PONG, 7, 0, message_id)
 
-            if ttl > 0:
+            if ttl > 1:
                 for item in self.get_peer_id_set:
                     if item != peer_id:
-                        self.create_meassage(item, GnutellaBodyId.PING, ttl, hops, message_id)
+                        self.create_meassage(item, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
             # TODO
-            # servent behavior when receiving PONG message
-            pass
+            """
+            Implementation: - search the ping_list and forward the PONG message
+            if ttl > 0
+            """
+            if ttl > 1:
+                for item in self.get_ping_list():
+                    if item.message_id == message.get_message_id():
+                        self.create_message(item.peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
+
         if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
             # TODO
             # servent behavior when receiving QUERY message

@@ -11,7 +11,6 @@ class Message:
         self.body = None
         self.payload_length = None
         self.payload_descriptor = None
-        # self.id = md5(time + payload_length)
         
     def set_body(self, body):
         self.body = body

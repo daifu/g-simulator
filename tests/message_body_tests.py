@@ -3,14 +3,14 @@ from pygnutella.messagebody import *
 from pygnutella.message import Message
 
 def test_PingBody():
-    message = Message()
+    message = Message('')
     ping = PingBody(message)
     assert_equal(ping.message, message)
     assert_equal(ping.get_length(), 0)
     assert_equal(ping.serialize(), b'')
     
 def test_PongBody():
-    message = Message()
+    message = Message('')
     ip = '' 
     port = 5000 
     num_of_files = 0 # TODO: get the real number
@@ -23,7 +23,7 @@ def test_PongBody():
     assert_equal(pong.num_of_kb, 0)
 
 def test_QueryBody():
-    message = Message()
+    message = Message('')
     min_speed = 100 # default is 100 kB/sec
     search_criteria = '' # TODO: get the real string
     query = QueryBody(message, min_speed, search_criteria)
@@ -31,7 +31,7 @@ def test_QueryBody():
     assert_equal(query.search_criteria, search_criteria)
 
 def test_QueryHitBody():
-    message = Message()
+    message = Message('')
     ip = ''
     port = 5000
     speed = 100 # default is 100 kB/sec
@@ -48,7 +48,7 @@ def test_QueryHitBody():
     assert_equal(query_hit.servent_id, '')
 
 def test_PushBody():
-    message = Message()
+    message = Message('')
     ip = ''
     port = 5000
     file_index = '' # TODO: a index that find the file from the servent

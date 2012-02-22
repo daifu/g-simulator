@@ -107,8 +107,13 @@ class Servent:
         """ servent behavior when receiving a message """
 
         """ decrease ttl and increase hop """
+        old_ttl = message.get_ttl()
+        old_hops = message.get_hops() 
         message.decrease_ttl
         message.increase_hop
+        ttl = message.get_ttl()
+        hops = message.get_hops()
+        message_id = message.get_message_id()
 
         """ if ttl = 0, the message is "dead", do not need to forward it """
         if message.get_payload_descriptor() == GnutellaBodyId.PING:
@@ -119,12 +124,12 @@ class Servent:
             get the PING from
                             - respond peer_id with PONG
             """
-            self.create_message(peer_id, GnutellaBodyId.PONG)
+            self.create_message(peer_id, GnutellaBodyId.PONG, old_ttl, old_hops, message_id)
 
             if ttl > 0:
                 for item in self.get_peer_id_set:
                     if item != peer_id:
-                        self.create_meassage(item, GnutellaBodyId.PING)
+                        self.create_meassage(item, GnutellaBodyId.PING, ttl, hops, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
             # TODO

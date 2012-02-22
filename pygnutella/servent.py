@@ -1,3 +1,4 @@
+# -*- coding: cp1252 -*-
 import logging
 from reactor import Reactor
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
@@ -93,6 +94,7 @@ class Servent:
             return
         # Put body into the message        
         message.setBody(body)
+        message.set_payload_length(body.gelength()) # get body length
         # Send message to peer with peer_id
         self.reactor.send(peer_id, message)
         
@@ -111,8 +113,19 @@ class Servent:
         """ if ttl = 0, the message is "dead", do not need to forward it """
         if message.get_payload_descriptor() == GnutellaBodyId.PING:
             # TODO
-            # servent behavior when receiving PING message
-            pass
+            """
+            Implementation: - search through the servent's neighbor peer_id
+            list and send ping message to any peer not the one who the servent
+            get the PING from
+                            - respond peer_id with PONG
+            """
+            self.create_message(peer_id, GnutellaBodyId.PONG)
+
+            if ttl > 0:
+                for item in self.get_peer_id_set:
+                    if item != peer_id:
+                        self.create_meassage(item, GnutellaBodyId.PING)
+                
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
             # TODO
             # servent behavior when receiving PONG message

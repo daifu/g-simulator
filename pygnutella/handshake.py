@@ -54,7 +54,8 @@ class Gnutella4Handshake(IHandShake):
         self.__welcome = 'GNUTELLA CONNECT/0.4\n\n'
         self.__response = 'GNUTELLA OK\n\n'
         self.__buffer = ''
-        self.__map['version'] = 0.4        
+        # __map is not inherited from parent, should use map insetead of __map
+        #self.__map['version'] = 0.4        
         return
             
     def onIncoming(self):

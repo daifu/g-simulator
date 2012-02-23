@@ -73,7 +73,7 @@ class Servent:
     # 1 more get and set method for something called Reactor (socketPool)
     # as Howard want
 
-    def create_message(self, peer_id, body_id, ttl, hops, message_id):
+    def create_message(self, peer_id, body_id, message_id, ttl = 7, hops = 0):
         """ 
         creating a message, not sure if the input argument is enough
         this also send the message after creating it
@@ -114,8 +114,8 @@ class Servent:
         else:
             return
         # Put body into the message        
-        message.setBody(body)
-        message.set_payload_length(body.gelength()) # get body length
+        message.set_body(body)
+        message.set_payload_length(body.get_length()) # get body length
         # Send message to peer with peer_id
         self.reactor.send(peer_id, message)
         

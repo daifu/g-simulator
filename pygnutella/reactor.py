@@ -45,7 +45,8 @@ class Reactor:
         self.receiver = None
         self.channels = {}
         handler = ServerHandler(self, address)
-        self.add(handler.socket, handler)
+        # peer_id need to be fixed, handler.socket will not work
+        #self.add(handler.socket, handler)
         return
     
     def send(self, peer_id, message):

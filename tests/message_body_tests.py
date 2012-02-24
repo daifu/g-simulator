@@ -38,10 +38,22 @@ def test_PongBody():
 def test_QueryBody():
     message = Message('')
     min_speed = 100 # default is 100 kB/sec
-    search_criteria = '' # TODO: get the real string
+    search_criteria = 'helloworld' # TODO: get the real string
     query = QueryBody(message, min_speed, search_criteria)
     assert_equal(query.min_speed, 100)
     assert_equal(query.search_criteria, search_criteria)
+
+    #test the serialize and deserialize
+    body = query.serialize()
+    de_body = query.deserialize()
+
+    body_expected_str = "\x00\x00\x00dhelloworld"
+    de_body_exp_tuple = (100, "helloworld")
+    size_exp = 14
+
+    assert_equal(query.body, body_expected_str)
+    assert_equal(de_body, de_body_exp_tuple)
+    assert_equal(query.get_length(), size_exp)
 
 def test_QueryHitBody():
     message = Message('')
@@ -62,12 +74,23 @@ def test_QueryHitBody():
 
 def test_PushBody():
     message = Message('')
-    ip = ''
+    ip = '127.0.0.1'
     port = 5000
-    file_index = '' # TODO: a index that find the file from the servent
+    file_index = 'indexhere'
     push = PushBody(message, ip, port, file_index)
     assert_equal(push.message, message)
-    assert_equal(push.ip, '')
+    assert_equal(push.ip, '127.0.0.1')
     assert_equal(push.port, 5000)
-    assert_equal(push.file_index, '')
+    assert_equal(push.file_index, 'indexhere')
 
+    #test the serialize and deserialize
+    body = push.serialize()
+    de_body = push.deserialize()
+
+    body_expected_str = "127.0.0.1\x00\x00\x13\x88indexhere"
+    de_body_exp_tuple = ('127.0.0.1', 5000, "indexhere")
+    size_exp = 22
+
+    assert_equal(push.body, body_expected_str)
+    assert_equal(de_body, de_body_exp_tuple)
+    assert_equal(push.get_length(), size_exp)

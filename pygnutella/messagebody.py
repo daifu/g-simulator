@@ -44,13 +44,13 @@ class PingBody(IMessageBody):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PING)
         return
-    
+
     def get_length(self):
         return 0
-    
+
     def serialize(self):
         return b''
-            
+
     def deserialize(self, raw_data):
         return 0
 
@@ -98,19 +98,28 @@ class PushBody(IMessageBody):
         self.ip = ip
         self.port = port
         self.file_index = file_index
+
+        self.fmt = ""
+        self.body = ""
         return
 
     def get_length(self):
-        # TODO: implement this method
-        pass
+        return struct.calcsize(self.fmt)
 
     def serialize(self):
-        # TODO: implement this method
-        pass
+        self.fmt = "!%ssi%ss" % (len(self.ip),
+                                 len(self.file_index))
+        self.body = struct.pack(self.fmt, 
+                                self.ip, 
+                                self.port, 
+                                self.file_index)
+        return self.body
 
-    def deserialize(self, raw_data):
-        # TODO: implement this method
-        pass
+    def deserialize(self, raw_data = ""):
+        if raw_data is "":
+            raw_data = self.body
+        return struct.unpack(self.fmt, raw_data)
+
 
 class QueryBody(IMessageBody):
     """
@@ -121,20 +130,26 @@ class QueryBody(IMessageBody):
         self.message.set_payload_descriptor(GnutellaBodyId.QUERY)
         self.min_speed = min_speed
         self.search_criteria = search_criteria
+
+        self.fmt = ""
+        self.body = ""
         return
 
     def get_length(self):
-        # TODO: implement this method
-        pass
-            
+        return struct.calcsize(self.fmt)
+
     def serialize(self):
-        # TODO: implement this method
-        pass
-    
-    def deserialize(self, raw_data):
-        # TODO: implement this method
-        pass
-    
+        self.fmt = "!i%ss" % len(self.search_criteria)
+        self.body = struct.pack(self.fmt,
+                                self.min_speed,
+                                self.search_criteria)
+        return self.body
+
+    def deserialize(self, raw_data = ""):
+        if raw_data is "":
+            raw_data = self.body
+        return struct.unpack(self.fmt, raw_data)
+
 class QueryHitBody(IMessageBody):
     """
     Query hit body includes number of hits, port, ip address, speed, result
@@ -150,16 +165,33 @@ class QueryHitBody(IMessageBody):
         self.result_set = result_set
         self.servent_id = servent_id
         self.num_of_hits = num_of_hits
+
+        self.fmt = ""
+        self.body = ""
         return
 
     def get_length(self):
-        # TODO: implement this method
-        pass
+        return struct.calcsize(self.fmt)
 
+    #No idea how to implement the result_set
     def serialize(self):
-        # TODO: implement this method
-        pass
-    
-    def deserialize(self, raw_data):
-        # TODO: implement this method
-        pass
+        #self.fmt = "!%ssii%ss" % (len(self.ip),
+                                  #len(self.servent_id))
+        ##for the result_set, loop through it and append
+        ##it to fmt
+        #for result in self.result_set:
+            #self.fmt += "%ss" % len(result)
+
+        #self.body = struct.pack(self.fmt,
+                                #self.ip,
+                                #self.port,
+                                #self.speed,
+                                #self.servent_id,
+                                #self.num_of_hits,
+                                #self.result_set)
+        return self.body
+
+    def deserialize(self, raw_data = ""):
+        if raw_data is "":
+            raw_data = self.body
+        return struct.unpack(self.fmt, raw_data)

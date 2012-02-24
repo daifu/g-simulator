@@ -51,7 +51,8 @@ class Reactor:
     
     def send(self, peer_id, message):
         self.logger.debug("send() -> %s", message)
-        self.channels[peer_id].send_message(message)
+        #there is a problme for the peer_id
+        #self.channels[peer_id].send_message(message)
         return
     
     def add(self, peer_id, handler):

@@ -1,4 +1,5 @@
 import logging
+import struct
 
 class GnutellaBodyId:
     PING = 0x00
@@ -34,7 +35,7 @@ class IMessageBody:
         Return either None or NextMessageIndex
         """
         raise NotImplementedError
-    
+
 class PingBody(IMessageBody):
     """
     Ping body have no associated payload and are of zero length
@@ -52,33 +53,41 @@ class PingBody(IMessageBody):
             
     def deserialize(self, raw_data):
         return 0
-        
-    
+
+
 class PongBody(IMessageBody):
     """
     Pong body include Port, IP Address, Number of Files Shared, Number of Kilobytes Shared.
     """
-    def __init__(self, message, ip, port, num_of_files, num_of_kb):
+    def __init__(self, message, ip, port, num_of_files = 0, num_of_kb = 0):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PONG)
         self.ip = ip
         self.port = port
         self.num_of_files = num_of_files
         self.num_of_kb = num_of_kb
+
+        self.fmt = ""
+        self.body = ""
         return
-    
+
     def get_length(self):
-        # TODO: implement this method
-        pass
-        
+        return struct.calcsize(self.fmt)
+
     def serialize(self):
-        # TODO: implement this method
-        pass
-    
-    def deserialize(self, raw_data):
-        # TODO: implement this method
-        pass
-    
+        self.fmt = "!%ssiii" % len(self.ip)
+        self.body = struct.pack(self.fmt, 
+                                self.ip, 
+                                self.port, 
+                                self.num_of_files, 
+                                self.num_of_kb)
+        return self.body
+
+    def deserialize(self, raw_data = ""):
+        if raw_data is "":
+            raw_data = self.body
+        return struct.unpack(self.fmt, raw_data)
+
 class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
@@ -94,15 +103,15 @@ class PushBody(IMessageBody):
     def get_length(self):
         # TODO: implement this method
         pass
-        
+
     def serialize(self):
         # TODO: implement this method
         pass
-    
+
     def deserialize(self, raw_data):
         # TODO: implement this method
         pass
-    
+
 class QueryBody(IMessageBody):
     """
     Query body includes minimum speed, search criteria
@@ -146,7 +155,7 @@ class QueryHitBody(IMessageBody):
     def get_length(self):
         # TODO: implement this method
         pass
-                    
+
     def serialize(self):
         # TODO: implement this method
         pass

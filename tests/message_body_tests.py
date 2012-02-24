@@ -8,19 +8,32 @@ def test_PingBody():
     assert_equal(ping.message, message)
     assert_equal(ping.get_length(), 0)
     assert_equal(ping.serialize(), b'')
-    
+
 def test_PongBody():
     message = Message('')
-    ip = '' 
+    ip = '127.0.0.1' 
     port = 5000 
     num_of_files = 0 # TODO: get the real number
     num_of_kb = 0 #  TODO: get the real number
     pong = PongBody(message, ip, port, num_of_files, num_of_kb)
     assert_equal(pong.message, message)
-    assert_equal(pong.ip, '')
+    assert_equal(pong.ip, '127.0.0.1')
     assert_equal(pong.port, 5000)
     assert_equal(pong.num_of_files, 0)
     assert_equal(pong.num_of_kb, 0)
+
+    #test the serialize and deserialize
+    body = pong.serialize()
+    de_body = pong.deserialize()
+
+    body_expected_str =\
+    "127.0.0.1\x00\x00\x13\x88\x00\x00\x00\x00\x00\x00\x00\x00"
+    de_body_exp_tuple = ('127.0.0.1', 5000, 0, 0)
+    size_exp = 21
+
+    assert_equal(pong.body, body_expected_str)
+    assert_equal(de_body, de_body_exp_tuple)
+    assert_equal(pong.get_length(), size_exp)
 
 def test_QueryBody():
     message = Message('')
@@ -57,4 +70,4 @@ def test_PushBody():
     assert_equal(push.ip, '')
     assert_equal(push.port, 5000)
     assert_equal(push.file_index, '')
-    
+

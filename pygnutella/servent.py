@@ -18,7 +18,7 @@ class ServentInfo:
     hop_num = 0
     
 class ServentList:
-    node # node is another servent, refer to ServentInfo above
+    node = [] # node is another servent, refer to ServentInfo above
     message_id = 0
     
 class Servent:
@@ -188,7 +188,7 @@ class Servent:
             # send PING to any neighbor that not the one servent recceived the PING from
             if ttl > 1:
                 for item in self.get_peer_id_set:
-                    if item.peer_id != peer_id and item.hop_num = 1:
+                    if item.peer_id != peer_id and item.hop_num == 1:
                         self.create_meassage(item.peer_id, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
@@ -219,7 +219,7 @@ class Servent:
             # send PING to any neighbor that not the one servent recceived the QUERY from
             if ttl > 1:
                 for item in self.get_peer_id_set:
-                    if item.peer_id != peer_id and item.hop_num = 1:
+                    if item.peer_id != peer_id and item.hop_num == 1:
                         self.create_meassage(item.peer_id, GnutellaBodyId.QUERY, ttl-1, hops+1, message_id)
             
         if message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:

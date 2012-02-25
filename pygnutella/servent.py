@@ -4,8 +4,21 @@ from reactor import Reactor
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
 from message import Message
 
-class PingList:
+
+# struct of file, each servent have an array/list of these files
+class FileInfo:
+    file_id = 0
+    file_name =  ""
+    file_size = 0
+
+# a node is another servent, each servent have an array/list of other servents
+# in the network, up to 7 hops from it
+class ServentInfo:
     peer_id = 0
+    hop_num = 0
+    
+class ServentList:
+    node # node is another servent, refer to ServentInfo above
     message_id = 0
     
 class Servent:
@@ -14,12 +27,17 @@ class Servent:
         self.ip = ip
         self.port = port
         self.files = files
+
+        self.peer_id_set = []
+        self.ping_list = {}
+        
         self.reactor = Reactor((ip, port))
         # TODO: fix this
         self.reactor.install_handlers(None, None, None, None)
         # TODO: create servent id
         self.id = ''
-        
+
+    # each member of files is a FileInfo    
     def set_files(self, files):
         self.files = files
 
@@ -52,17 +70,17 @@ class Servent:
         # TODO
         return self.peer_id_set
 
-    def add_to_ping_list(peer_id, message_id):
+    def add_to_ping_list(self, new_servent, message_id):
         """
         add a peer's id that send a ping message to ping_list
         """
         # TODO
-        # don't know how array/vector/..w/e in python work
-        # someone should do it
+        # just gieve it a try, should test it somehow
+        self.ping_list[message_id] = new_servent
         
     def get_ping_list(self):
         """
-        a list/array of IP and message_id that the servent receive the ping from
+        a list/array of serventand message_id that the servent receive the ping from
         """
         # TODO
         # right now just need a method to make it work
@@ -138,15 +156,20 @@ class Servent:
             """
             Implementation: - search through the servent's neighbor peer_id
             list and send ping message to any peer not the one who the servent
-            get the PING from
+            get the PING from and 1 hop from the servent
                             - respond peer_id with PONG
+                            - add the servent that send the PING to this servent's
+                              ping-list
             """
             self.create_message(peer_id, GnutellaBodyId.PONG, 7, 0, message_id)
-
+            new_servent.peer_id = peer_id;
+            new_servent.hop = 0;
+            add_to_ping_list(new_servent, message_id)
+            
             if ttl > 1:
                 for item in self.get_peer_id_set:
-                    if item != peer_id:
-                        self.create_meassage(item, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
+                    if item.peer_id != peer_id and item.hop_num = :
+                        self.create_meassage(item.peer_id, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
             # TODO
@@ -155,9 +178,8 @@ class Servent:
             if ttl > 0
             """
             if ttl > 1:
-                for item in self.get_ping_list():
-                    if item.message_id == message.get_message_id():
-                        self.create_message(item.peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
+                return_peer_id = self.ping_list[message_id].peer_id
+                self.create_message(return_peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
 
         if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
             # TODO

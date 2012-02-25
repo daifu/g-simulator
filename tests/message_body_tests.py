@@ -57,20 +57,42 @@ def test_QueryBody():
 
 def test_QueryHitBody():
     message = Message('')
-    ip = ''
+    ip = '127.0.0.1'
     port = 5000
     speed = 100 # default is 100 kB/sec
-    result_set = [] # TODO: create real resut set
-    servent_id = ''
+    result_set = [{
+            'file_index': 'a_test',
+            'file_size': 100,
+            'file_name': 'a_name'
+        },
+        {
+            'file_index': 'b_test',
+            'file_size': 200,
+            'file_name': 'b_name'
+        }]
+    servent_id = 'thisisservent_id'
     num_of_hits = 0 # TODO: create number of hits
     query_hit = QueryHitBody(message, ip, port, speed, 
                         result_set, servent_id, num_of_hits)
     assert_equal(query_hit.message, message)
-    assert_equal(query_hit.ip, '')
+    assert_equal(query_hit.ip, '127.0.0.1')
     assert_equal(query_hit.port, 5000)
     assert_equal(query_hit.speed, 100)
-    assert_equal(query_hit.result_set, [])
-    assert_equal(query_hit.servent_id, '')
+    assert_equal(query_hit.result_set, result_set)
+    assert_equal(query_hit.servent_id, servent_id)
+
+    #test the serialize and deserialize
+    body = query_hit.serialize()
+    de_body = query_hit.deserialize()
+
+    body_expected_str = "127.0.0.1\x00\x00\x13\x88\x00\x00\x00dthisisservent_ida_test\x00\x00\x00da_nameb_test\x00\x00\x00\xc8b_name"
+    de_body_exp_tuple = ('127.0.0.1', 5000, 100, 'thisisservent_id',
+                         'a_test', 100, 'a_name', 'b_test', 200, 'b_name')
+    size_exp = 65
+
+    assert_equal(query_hit.body, body_expected_str)
+    assert_equal(de_body, de_body_exp_tuple)
+    assert_equal(query_hit.get_length(), size_exp)
 
 def test_PushBody():
     message = Message('')

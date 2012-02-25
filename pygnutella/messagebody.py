@@ -154,6 +154,7 @@ class QueryHitBody(IMessageBody):
     """
     Query hit body includes number of hits, port, ip address, speed, result
     set, servent identifier.
+    result set include file index, file size, and file name
     """
 
     def __init__(self, message, ip, port, speed, result_set, servent_id, num_of_hits):
@@ -175,20 +176,25 @@ class QueryHitBody(IMessageBody):
 
     #No idea how to implement the result_set
     def serialize(self):
-        #self.fmt = "!%ssii%ss" % (len(self.ip),
-                                  #len(self.servent_id))
-        ##for the result_set, loop through it and append
-        ##it to fmt
-        #for result in self.result_set:
-            #self.fmt += "%ss" % len(result)
+        self.fmt = "!%ssii%ss" % (len(self.ip),
+                                  len(self.servent_id))
+        self.body = struct.pack(self.fmt, 
+                                self.ip, 
+                                self.port, 
+                                self.speed, 
+                                self.servent_id)
 
-        #self.body = struct.pack(self.fmt,
-                                #self.ip,
-                                #self.port,
-                                #self.speed,
-                                #self.servent_id,
-                                #self.num_of_hits,
-                                #self.result_set)
+        #for the result_set, loop through it and append
+        #it to fmt
+        fmt = ""
+        for result in self.result_set:
+            fmt = "%ssi%ss" % (len(result['file_index']),
+                                len(result['file_name']))
+            self.fmt += fmt
+            fmt = '!' + fmt
+            self.body += struct.pack(fmt, result['file_index'],
+                                          result['file_size'],
+                                          result['file_name'])
         return self.body
 
     def deserialize(self, raw_data = ""):

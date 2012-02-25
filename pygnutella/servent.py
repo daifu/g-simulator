@@ -28,10 +28,10 @@ class Servent:
         self.port = port
         self.files = files
 
-        self.peer_id_set = []
-        self.ping_list = {}
-        self.query_list = {}
-        self.push_list = {}
+        self.peer_id_set = [] # array of servent info
+        self.ping_list = {} # a dict that map message_id to a servent
+        self.query_list = {} # a dict that map message_id to a servent 
+        self.push_list = {} # a dict that map message_id to a servent
         
         self.reactor = Reactor((ip, port))
         # TODO: fix this
@@ -65,6 +65,11 @@ class Servent:
         # TODO
         return self.result_set
 
+    def search_criteria(self, criteria):
+        # TODO
+        # search the files with criteria
+        return False
+    
     def get_peer_id_set(self):
         """
         get a set of peer_id that the servent currently connect to
@@ -76,7 +81,6 @@ class Servent:
         """
         add a peer's id that send a ping message to ping_list
         """
-        # TODO
         # just gieve it a try, should test it somehow
         self.ping_list[message_id] = new_servent
         
@@ -87,6 +91,18 @@ class Servent:
         # TODO
         # right now just need a method to make it work
         return self.ping_list
+
+    def add_to_query_list(self, new_servent, message_id):
+        """
+        add a peer's id that send a query message to query_list
+        """
+        self.query_list[message_id] = new_servent
+
+    def get_query_list(self):
+        """
+        a list/array of serventand message_id that the servent receive the ping from
+        """
+        return self.query_list
     
     # TODO
     # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 
@@ -146,6 +162,7 @@ class Servent:
 
     def on_receive(self, peer_id, message):
         """ servent behavior when receiving a message """
+        logging.debug('Receive message from ' + peer_id + '\n')
 
         """ decrease ttl and increase hop """
         ttl = message.get_ttl()
@@ -165,12 +182,13 @@ class Servent:
             """
             self.create_message(peer_id, GnutellaBodyId.PONG, 7, 0, message_id)
             new_servent.peer_id = peer_id;
-            new_servent.hop = 0;
-            add_to_ping_list(new_servent, message_id)
-            
+            new_servent.hop = 1;
+            self.add_to_ping_list(new_servent, message_id)
+
+            # send PING to any neighbor that not the one servent recceived the PING from
             if ttl > 1:
                 for item in self.get_peer_id_set:
-                    if item.peer_id != peer_id and item.hop_num = :
+                    if item.peer_id != peer_id and item.hop_num = 1:
                         self.create_meassage(item.peer_id, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
@@ -184,9 +202,26 @@ class Servent:
                 self.create_message(return_peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
 
         if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
-            # TODO
             # servent behavior when receiving QUERY message
-            pass
+            """
+            Implementation: - add the servent to query_list
+                            - search the file list for the criteria, if it hit,
+            return with query hit
+                            - send query to neighbor servent
+            """
+            new_servent.peer_id = peer_id;
+            new_servent.hop = 1;
+            self.add_to_query_list(new_servent, message_id)
+
+            if search_criteria(criteria) == True:
+                self.create_message(peer_id, GnutellaBodyId.QUERY, ttl-1, hop+1, message_id)
+
+            # send PING to any neighbor that not the one servent recceived the QUERY from
+            if ttl > 1:
+                for item in self.get_peer_id_set:
+                    if item.peer_id != peer_id and item.hop_num = 1:
+                        self.create_meassage(item.peer_id, GnutellaBodyId.QUERY, ttl-1, hops+1, message_id)
+            
         if message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
             # TODO
             # servent behavior when receiving QUERYHIT message

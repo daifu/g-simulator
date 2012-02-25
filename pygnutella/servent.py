@@ -30,6 +30,8 @@ class Servent:
 
         self.peer_id_set = []
         self.ping_list = {}
+        self.query_list = {}
+        self.push_list = {}
         
         self.reactor = Reactor((ip, port))
         # TODO: fix this

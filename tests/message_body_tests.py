@@ -28,7 +28,7 @@ def test_PongBody():
 
     body_expected_str =\
     "127.0.0.1\x00\x00\x13\x88\x00\x00\x00\x00\x00\x00\x00\x00"
-    de_body_exp_tuple = ('127.0.0.1', 5000, 0, 0)
+    de_body_exp_tuple = (ip, port, num_of_files, num_of_kb)
     size_exp = 21
 
     assert_equal(pong.body, body_expected_str)
@@ -48,7 +48,7 @@ def test_QueryBody():
     de_body = query.deserialize()
 
     body_expected_str = "\x00\x00\x00dhelloworld"
-    de_body_exp_tuple = (100, "helloworld")
+    de_body_exp_tuple = (min_speed, search_criteria)
     size_exp = 14
 
     assert_equal(query.body, body_expected_str)
@@ -86,7 +86,7 @@ def test_QueryHitBody():
     de_body = query_hit.deserialize()
 
     body_expected_str = "127.0.0.1\x00\x00\x13\x88\x00\x00\x00dthisisservent_ida_test\x00\x00\x00da_nameb_test\x00\x00\x00\xc8b_name"
-    de_body_exp_tuple = ('127.0.0.1', 5000, 100, 'thisisservent_id',
+    de_body_exp_tuple = (ip, port, speed, servent_id,
                          'a_test', 100, 'a_name', 'b_test', 200, 'b_name')
     size_exp = 65
 
@@ -110,7 +110,7 @@ def test_PushBody():
     de_body = push.deserialize()
 
     body_expected_str = "127.0.0.1\x00\x00\x13\x88indexhere"
-    de_body_exp_tuple = ('127.0.0.1', 5000, "indexhere")
+    de_body_exp_tuple = (ip, port, file_index)
     size_exp = 22
 
     assert_equal(push.body, body_expected_str)

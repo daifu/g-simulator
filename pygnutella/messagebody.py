@@ -84,6 +84,9 @@ class PongBody(IMessageBody):
         return self.body
 
     def deserialize(self, raw_data = ""):
+        """
+        Return a tuple of (ip, port, num_of_files, num_of_kb)
+        """
         if raw_data is "":
             raw_data = self.body
         return struct.unpack(self.fmt, raw_data)
@@ -116,6 +119,9 @@ class PushBody(IMessageBody):
         return self.body
 
     def deserialize(self, raw_data = ""):
+        """
+        Return a tuple of (ip, port, file_index)
+        """
         if raw_data is "":
             raw_data = self.body
         return struct.unpack(self.fmt, raw_data)
@@ -146,6 +152,9 @@ class QueryBody(IMessageBody):
         return self.body
 
     def deserialize(self, raw_data = ""):
+        """
+        Return a tuple of (min_speed, search_criteria)
+        """
         if raw_data is "":
             raw_data = self.body
         return struct.unpack(self.fmt, raw_data)
@@ -198,6 +207,11 @@ class QueryHitBody(IMessageBody):
         return self.body
 
     def deserialize(self, raw_data = ""):
+        """
+        Return a tuple of (ip, port, speed, servent_id, 
+                           file_index, file_size, file_name
+                           ...repeat result_set...)
+        """
         if raw_data is "":
             raw_data = self.body
         return struct.unpack(self.fmt, raw_data)

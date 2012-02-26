@@ -38,15 +38,15 @@ class Reactor:
         
     """
     def __init__(self, address):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)        
         self.connector = None
         self.disconnector = None
         self.error = None
         self.receiver = None
         self.channels = {}
-        handler = ServerHandler(self, address)
-        # peer_id need to be fixed, handler.socket will not work
-        #self.add(handler.socket, handler)
+        self.logger.debug("reactor.__init__()")
+        handler = ServerHandler(reactor = self, address = address)
+        self.add(hash(handler.socket), handler)
         return
     
     def send(self, peer_id, message):
@@ -56,12 +56,12 @@ class Reactor:
         return
     
     def add(self, peer_id, handler):
-        self.logger.debug("add() -> %s", peer_id)
-        self[peer_id] = handler
+        self.logger.debug("add() -> peer_id = %s", peer_id)
+        self.channels[peer_id] = handler
         return
     
     def remove(self, peer_id):
-        self.logger.debug("remove() -> %s", peer_id)
+        self.logger.debug("remove() -> peer_id = %s", peer_id)
         del self.channels[peer_id]
     
     def install_handlers(self, connector, receiver, disconnector, error):
@@ -76,7 +76,7 @@ class Reactor:
         self.logger.debug("make_outgoing_connection() -> %s", address)
         handler = ConnectionHandler(reactor = self)
         handler.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.add(handler.socket, handler)
+        self.add(hash(handler.socket), handler)
         return
     
     def run(self):
@@ -106,7 +106,7 @@ class ServerHandler(asyncore.dispatcher):
         handler = ConnectionHandler(reactor = self.reactor)
         sock.setblocking(0)
         handler.set_socket(sock = sock)
-        self.reactor.add(sock, handler)
+        self.reactor.add(hash(sock), handler)
         self.reactor.connector(sock)                
         return
     
@@ -114,7 +114,7 @@ class ServerHandler(asyncore.dispatcher):
         self.logger.debug('handle_close()')
         self.close()
         self.reactor.disconnector(self.socket)
-        self.reactor.remove(self.socket)        
+        self.reactor.remove(hash(self.socket))        
         return
     
 class ConnectionHandler(asyncore.dispatcher):

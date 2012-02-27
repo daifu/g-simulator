@@ -65,16 +65,16 @@ class PongBody(IMessageBody):
         return
 
     def serialize(self):        
-        body = pack('!H', self.port) + pack('<I', self.ip) + pack('!II', self.num_of_files, self.num_of_kb)
+        body = pack('!H', self.port) + pack('<L', self.ip) + pack('!II', self.num_of_files, self.num_of_kb)
         return body
 
     def deserialize(self, raw_data):        
-        if not len(raw_data) == self.length():
+        if not len(raw_data) == self.__length:
             return None
         self.port = unpack('!H', raw_data)
-        self.ip = unpack('<I', raw_data[2:])
+        self.ip = unpack('<L', raw_data[2:])
         self.num_of_files, self.num_of_kb = unpack('!II', raw_data[6:])
-        return self.get_length()
+        return self.__length
 
 class PushBody(IMessageBody):
     """
@@ -87,7 +87,7 @@ class PushBody(IMessageBody):
         self.ip = ip
         self.port = port
         self.file_index = file_index
-        self.fmt = "!16sIIH"
+        self.fmt = "!16sILH"
         return
 
     def serialize(self):
@@ -95,10 +95,11 @@ class PushBody(IMessageBody):
         return body
 
     def deserialize(self, raw_data):
-        if not len(raw_data) == self.length():
+        size = calcsize(self.fmt)
+        if not len(raw_data) == size:
             return None        
         self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data)
-        return self.get_length()
+        return size
 
 
 class QueryBody(IMessageBody):
@@ -147,7 +148,7 @@ class QueryHitBody(IMessageBody):
         return
 
     def serialize(self):
-        body = pack("!BHII", self.num_of_hits, self.port, self.ip, self.speed)
+        body = pack("!BHLI", self.num_of_hits, self.port, self.ip, self.speed)
         for result in self.result_set:
             fmt = "!iI%ss" % (len(result['file_name'])+2)                        
             body += pack(fmt, result['file_index'], result['file_size'], result['file_name'])
@@ -156,7 +157,7 @@ class QueryHitBody(IMessageBody):
     def deserialize(self, raw_data):
         # total_size maintain number of bytes used up in deserialize
         total_size = 0
-        fmt = "!BHII"
+        fmt = "!BHLI"
         size = calcsize(fmt)
         if len(raw_data) > size:
             self.num_of_hits, self.port, self.ip, self.speed = unpack(fmt, raw_data)

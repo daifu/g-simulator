@@ -74,15 +74,15 @@ class Message:
             return None
         # deserialize the body
         if self.payload_descriptor == GnutellaBodyId.PING:
-            self.body = PingBody()
+            self.body = PingBody(self)
         elif self.payload_descriptor == GnutellaBodyId.PONG:
-            self.body = PongBody()
+            self.body = PongBody(self)
         elif self.payload_descriptor == GnutellaBodyId.PUSH:
-            self.body = PushBody()
+            self.body = PushBody(self)
         elif self.payload_descriptor == GnutellaBodyId.QUERY:
-            self.body = QueryBody()
+            self.body = QueryBody(self)
         elif self.payload_descriptor == GnutellaBodyId.QUERYHIT:
-            self.body = QueryHitBody()
+            self.body = QueryHitBody(self)
         # final check if deserialize correctly with payload_length given in the header                              
         if self.body.deserialize(raw_data[:self.payload_length]):
             raise ValueError

@@ -36,26 +36,26 @@ class Message:
     def get_message_id(self):
         return self.message_id
 
-    def get_ttl():
+    def get_ttl(self):
         return self.ttl
-    def get_hops():
+    
+    def get_hops(self):
         return self.hops
     
-    """ 2 helping method """
-    def decrease_ttl(self):
-        ttl = ttl - 1
+    def decrease_ttl(self, value=1):
+        self.ttl = self.ttl - value
 
-    def increase_hop(self):
-        hop = hop + 1
+    def increase_hop(self, value=1):
+        self.hop = self.hop + value
     
-    def serialize(self):
-        self.set_payload_length(self.body.get_length())
-        # TODO: generate message id
+    def serialize(self):        
         m = hashlib.md5()
+        # TODO: generate message id
         m.update("This need to be change")
         message_id = m.digest()        
-        header = struct.pack('!bbbi', self.payload_descriptor, self.ttl, self.hops, self.payload_length)
         payload = self.body.serialize()
+        self.payload_length = len(payload)
+        header = struct.pack('!bbbi', self.payload_descriptor, self.ttl, self.hops, self.payload_length)        
         return message_id + header + payload
     
     def deserialize(self, raw_data):

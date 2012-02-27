@@ -1,5 +1,5 @@
 import logging
-import struct
+from struct import *
 
 class GnutellaBodyId:
     PING = 0x00
@@ -32,7 +32,7 @@ class IMessageBody:
     
     def deserialize(self, raw_data):
         """
-        Return either None or NextMessageIndex
+        Return either None if incomplete or NextMessageIndex if complete buffered raw_data
         """
         raise NotImplementedError
 
@@ -49,7 +49,7 @@ class PingBody(IMessageBody):
         return 0
 
     def serialize(self):
-        return b''
+        return ''
 
     def deserialize(self, raw_data):
         return 0
@@ -65,31 +65,28 @@ class PongBody(IMessageBody):
         self.ip = ip
         self.port = port
         self.num_of_files = num_of_files
-        self.num_of_kb = num_of_kb
-
-        self.fmt = ""
-        self.body = ""
+        self.num_of_kb = num_of_kb        
+        # 2 bytes for port (NOTE: this is one byte extra from actual PONG)
+        # 4 bytes for ip address
+        # 4 bytes for number of files shared
+        # 4 byte for number of kilobytes shared
+        self.__length = 2+4+4+4
         return
 
     def get_length(self):
-        return struct.calcsize(self.fmt)
+        return self.__length
 
-    def serialize(self):
-        self.fmt = "!%ssiii" % len(self.ip)
-        self.body = struct.pack(self.fmt, 
-                                self.ip, 
-                                self.port, 
-                                self.num_of_files, 
-                                self.num_of_kb)
-        return self.body
+    def serialize(self):        
+        body = pack('!H', self.port) + pack('<I', self.ip) + pack('!II', self.num_of_files, self.num_of_kb)
+        return body
 
-    def deserialize(self, raw_data = ""):
-        """
-        Return a tuple of (ip, port, num_of_files, num_of_kb)
-        """
-        if raw_data is "":
-            raw_data = self.body
-        return struct.unpack(self.fmt, raw_data)
+    def deserialize(self, raw_data = ""):        
+        if not len(raw_data) == self.length():
+            return None
+        self.port = unpack('!H', raw_data)
+        self.ip = unpack('<I', raw_data[2:])
+        self.num_of_files, self.num_of_kb = unpack('!II', raw_data[6:])
+        return self.get_length()
 
 class PushBody(IMessageBody):
     """
@@ -107,12 +104,12 @@ class PushBody(IMessageBody):
         return
 
     def get_length(self):
-        return struct.calcsize(self.fmt)
+        return calcsize(self.fmt)
 
     def serialize(self):
         self.fmt = "!%ssi%ss" % (len(self.ip),
                                  len(self.file_index))
-        self.body = struct.pack(self.fmt, 
+        self.body = pack(self.fmt, 
                                 self.ip, 
                                 self.port, 
                                 self.file_index)
@@ -124,7 +121,7 @@ class PushBody(IMessageBody):
         """
         if raw_data is "":
             raw_data = self.body
-        return struct.unpack(self.fmt, raw_data)
+        return unpack(self.fmt, raw_data)
 
 
 class QueryBody(IMessageBody):
@@ -142,11 +139,11 @@ class QueryBody(IMessageBody):
         return
 
     def get_length(self):
-        return struct.calcsize(self.fmt)
+        return calcsize(self.fmt)
 
     def serialize(self):
         self.fmt = "!i%ss" % len(self.search_criteria)
-        self.body = struct.pack(self.fmt,
+        self.body = pack(self.fmt,
                                 self.min_speed,
                                 self.search_criteria)
         return self.body
@@ -157,7 +154,7 @@ class QueryBody(IMessageBody):
         """
         if raw_data is "":
             raw_data = self.body
-        return struct.unpack(self.fmt, raw_data)
+        return unpack(self.fmt, raw_data)
 
 class QueryHitBody(IMessageBody):
     """
@@ -181,13 +178,13 @@ class QueryHitBody(IMessageBody):
         return
 
     def get_length(self):
-        return struct.calcsize(self.fmt)
+        return calcsize(self.fmt)
 
     #No idea how to implement the result_set
     def serialize(self):
         self.fmt = "!%ssii%ss" % (len(self.ip),
                                   len(self.servent_id))
-        self.body = struct.pack(self.fmt, 
+        self.body = pack(self.fmt, 
                                 self.ip, 
                                 self.port, 
                                 self.speed, 
@@ -201,7 +198,7 @@ class QueryHitBody(IMessageBody):
                                 len(result['file_name']))
             self.fmt += fmt
             fmt = '!' + fmt
-            self.body += struct.pack(fmt, result['file_index'],
+            self.body += pack(fmt, result['file_index'],
                                           result['file_size'],
                                           result['file_name'])
         return self.body
@@ -214,4 +211,4 @@ class QueryHitBody(IMessageBody):
         """
         if raw_data is "":
             raw_data = self.body
-        return struct.unpack(self.fmt, raw_data)
+        return unpack(self.fmt, raw_data)

@@ -1,118 +1,124 @@
 from nose.tools import *
-from pygnutella.messagebody import *
+from pygnutella.messagebody import PingBody, PongBody, QueryBody, QueryHitBody, PushBody
 from pygnutella.message import Message
+from pygnutella.utils import *
+import socket
 
 def test_PingBody():
     message = Message('')
     ping = PingBody(message)
     assert_equal(ping.message, message)
-    assert_equal(ping.get_length(), 0)
-    assert_equal(ping.serialize(), b'')
+    assert_equal(ping.serialize(), '')
 
 def test_PongBody():
     message = Message('')
-    ip = '127.0.0.1' 
+    # convert decimal dotted quad string to long integer
+    ip = dottedQuadToNum('127.0.0.1') 
     port = 5000 
-    num_of_files = 0 # TODO: get the real number
-    num_of_kb = 0 #  TODO: get the real number
+    num_of_files = 1 
+    num_of_kb = 255 
     pong = PongBody(message, ip, port, num_of_files, num_of_kb)
     assert_equal(pong.message, message)
-    assert_equal(pong.ip, '127.0.0.1')
+    assert_equal(pong.ip, ip)
     assert_equal(pong.port, 5000)
-    assert_equal(pong.num_of_files, 0)
-    assert_equal(pong.num_of_kb, 0)
+    assert_equal(pong.num_of_files, 1)
+    assert_equal(pong.num_of_kb, 255)
 
-    #test the serialize and deserialize
-    body = pong.serialize()
-    de_body = pong.deserialize()
+    #test serialize
+    body = pong.serialize()    
+    body_expected_str = "\x13\x88\x7f\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xff"
+    assert_equal(body, body_expected_str)
 
-    body_expected_str =\
-    "127.0.0.1\x00\x00\x13\x88\x00\x00\x00\x00\x00\x00\x00\x00"
-    de_body_exp_tuple = (ip, port, num_of_files, num_of_kb)
-    size_exp = 21
-
-    assert_equal(pong.body, body_expected_str)
-    assert_equal(de_body, de_body_exp_tuple)
-    assert_equal(pong.get_length(), size_exp)
-
+    # test deserialize
+    de_pong = PongBody(message)
+    de_pong.deserialize(body_expected_str)
+    assert_equal(de_pong.message, message)
+    assert_equal(de_pong.ip, ip)
+    assert_equal(de_pong.port, 5000)
+    assert_equal(de_pong.num_of_files, 1)
+    assert_equal(de_pong.num_of_kb, 255)
+    
 def test_QueryBody():
     message = Message('')
-    min_speed = 100 # default is 100 kB/sec
-    search_criteria = 'helloworld' # TODO: get the real string
+    min_speed = 100 
+    search_criteria = 'helloworld' 
     query = QueryBody(message, min_speed, search_criteria)
     assert_equal(query.min_speed, 100)
-    assert_equal(query.search_criteria, search_criteria)
+    assert_equal(query.search_criteria, 'helloworld')
 
-    #test the serialize and deserialize
-    body = query.serialize()
-    de_body = query.deserialize()
+    #test the serialize
+    body = query.serialize()    
+    body_expected_str = "\x64helloworld\x00"    
+    assert_equal(body, body_expected_str)
+    
+    # test the deserialize
+    de_query = QueryBody(message)
+    de_query.deserialize(body_expected_str)
+    assert_equal(de_query.min_speed, 100)
+    assert_equal(de_query.search_criteria, 'helloworld')
 
-    body_expected_str = "\x00\x00\x00dhelloworld"
-    de_body_exp_tuple = (min_speed, search_criteria)
-    size_exp = 14
-
-    assert_equal(query.body, body_expected_str)
-    assert_equal(de_body, de_body_exp_tuple)
-    assert_equal(query.get_length(), size_exp)
-
+    
 def test_QueryHitBody():
     message = Message('')
-    ip = '127.0.0.1'
-    port = 5000
-    speed = 100 # default is 100 kB/sec
+    ip = dottedQuadToNum('127.0.0.1')
+    port = 59850
+    speed = 100 
     result_set = [{
-            'file_index': 'a_test',
+            'file_index': 3435,
             'file_size': 100,
             'file_name': 'a_name'
         },
         {
-            'file_index': 'b_test',
+            'file_index': 3535,
             'file_size': 200,
             'file_name': 'b_name'
         }]
     servent_id = 'thisisservent_id'
-    num_of_hits = 0 # TODO: create number of hits
-    query_hit = QueryHitBody(message, ip, port, speed, 
-                        result_set, servent_id, num_of_hits)
+    num_of_hits = len(result_set)
+    query_hit = QueryHitBody(message, num_of_hits, ip, port, speed, result_set, servent_id)
     assert_equal(query_hit.message, message)
-    assert_equal(query_hit.ip, '127.0.0.1')
-    assert_equal(query_hit.port, 5000)
+    assert_equal(query_hit.ip, ip)
+    assert_equal(query_hit.port, 59850)
     assert_equal(query_hit.speed, 100)
     assert_equal(query_hit.result_set, result_set)
     assert_equal(query_hit.servent_id, servent_id)
 
-    #test the serialize and deserialize
+    #test the serialize
     body = query_hit.serialize()
-    de_body = query_hit.deserialize()
-
-    body_expected_str = "127.0.0.1\x00\x00\x13\x88\x00\x00\x00dthisisservent_ida_test\x00\x00\x00da_nameb_test\x00\x00\x00\xc8b_name"
-    de_body_exp_tuple = (ip, port, speed, servent_id,
-                         'a_test', 100, 'a_name', 'b_test', 200, 'b_name')
-    size_exp = 65
-
-    assert_equal(query_hit.body, body_expected_str)
-    assert_equal(de_body, de_body_exp_tuple)
-    assert_equal(query_hit.get_length(), size_exp)
+    body_expected_str = "\x02\xe9\xca\x01\x00\x00\x7f\x00\x00\x00\x64\x00\x00\x0d\x6b\x00\x00\x00\x64a_name\x00\x00\x00\x00\x0d\xcf\x00\x00\x00\xc8b_name\x00\x00thisisservent_id"
+    assert_equal(body, body_expected_str)
+    
+    #test the deserialize
+    de_queryhit = QueryHitBody(message)
+    de_queryhit.deserialize(body_expected_str)
+    assert_equal(de_queryhit.ip, ip)
+    assert_equal(de_queryhit.port, 59850)
+    assert_equal(de_queryhit.speed, 100)
+    assert_equal(de_queryhit.result_set, result_set)
+    assert_equal(de_queryhit.servent_id, servent_id)
 
 def test_PushBody():
     message = Message('')
-    ip = '127.0.0.1'
+    ip = dottedQuadToNum('127.0.0.1')
     port = 5000
-    file_index = 'indexhere'
-    push = PushBody(message, ip, port, file_index)
+    file_index = 2565
+    servent_id = 'thisisservent_id'
+    push = PushBody(message, servent_id, ip, port, file_index)
     assert_equal(push.message, message)
-    assert_equal(push.ip, '127.0.0.1')
+    assert_equal(push.ip, ip)
     assert_equal(push.port, 5000)
-    assert_equal(push.file_index, 'indexhere')
+    assert_equal(push.file_index, 2565)
+    assert_equal(push.servent_id, 'thisisservent_id')
 
-    #test the serialize and deserialize
+    #test the serialize
     body = push.serialize()
-    de_body = push.deserialize()
+    body_expected_str = "thisisservent_id\x00\x00\x0a\x05\x01\x00\x00\x7f\x13\x88"
+    assert_equal(body, body_expected_str)
 
-    body_expected_str = "127.0.0.1\x00\x00\x13\x88indexhere"
-    de_body_exp_tuple = (ip, port, file_index)
-    size_exp = 22
-
-    assert_equal(push.body, body_expected_str)
-    assert_equal(de_body, de_body_exp_tuple)
-    assert_equal(push.get_length(), size_exp)
+    # test the deserialize
+    push_de = PushBody(message)
+    push_de.deserialize(body_expected_str)
+    assert_equal(push_de.ip, ip)
+    assert_equal(push_de.port, 5000)
+    assert_equal(push_de.file_index, 2565)
+    assert_equal(push_de.servent_id, 'thisisservent_id')    

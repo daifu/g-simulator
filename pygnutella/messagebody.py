@@ -122,7 +122,7 @@ class QueryBody(IMessageBody):
 
     def deserialize(self, raw_data):
         if len(raw_data) > 1 and raw_data[1:].count('\x00') > 0:
-            self.min_speed = unpack('!B', raw_data[0])
+            self.min_speed = unpack('!B', raw_data[0])[0]
             raw_data = raw_data[1:]            
             self.search_criteria = raw_data[:raw_data.index('\x00')]
             return 2+len(self.search_criteria)
@@ -178,9 +178,9 @@ class QueryHitBody(IMessageBody):
                 raw_data = raw_data[len(file_name)+2:]
                 total_size += len(file_name)+2
                 self.result_set.append({'file_index': file_index, 'file_size': file_size, 'file_name': file_name})
-            if len(raw_data) < 6:
+            if len(raw_data) < 16:
                 return None
-            self.servent_id = raw_data[:6]
-            return total_size + 6                   
+            self.servent_id = raw_data[:16]
+            return total_size + 16                   
         else:
             return None

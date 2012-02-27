@@ -1,5 +1,5 @@
 import logging
-from struct import *
+from struct import pack, unpack, calcsize
 
 class GnutellaBodyId:
     PING = 0x00
@@ -59,7 +59,7 @@ class PongBody(IMessageBody):
     """
     Pong body include Port, IP Address, Number of Files Shared, Number of Kilobytes Shared.
     """
-    def __init__(self, message, ip, port, num_of_files = 0, num_of_kb = 0):
+    def __init__(self, message, ip = None, port = None, num_of_files = None, num_of_kb = None):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PONG)
         self.ip = ip
@@ -80,7 +80,7 @@ class PongBody(IMessageBody):
         body = pack('!H', self.port) + pack('<I', self.ip) + pack('!II', self.num_of_files, self.num_of_kb)
         return body
 
-    def deserialize(self, raw_data = ""):        
+    def deserialize(self, raw_data):        
         if not len(raw_data) == self.length():
             return None
         self.port = unpack('!H', raw_data)
@@ -92,7 +92,7 @@ class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
     """
-    def __init__(self, servant_id, message, ip, port, file_index):
+    def __init__(self, message, servant_id = None, ip = None, port = None, file_index = None):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
         self.servant_id = servant_id
@@ -109,43 +109,43 @@ class PushBody(IMessageBody):
         body = pack(self.fmt, self.servant_id, self.file_index, self.ip, self.port)
         return body
 
-    def deserialize(self, raw_data = ""):
+    def deserialize(self, raw_data):
         if not len(raw_data) == self.length():
             return None        
         self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data)
+        return self.get_length()
 
 
 class QueryBody(IMessageBody):
     """
     Query body includes minimum speed, search criteria
     """
-    def __init__(self, message, min_speed, search_criteria):
+    def __init__(self, message, min_speed = None, search_criteria = None):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.QUERY)
         self.min_speed = min_speed
         self.search_criteria = search_criteria
-
+        # The parameter could set to None, because it meants to deseralize a raw_data packet
         self.fmt = ""
-        self.body = ""
         return
 
     def get_length(self):
+        self.fmt = "!B%ss" % (len(self.search_criteria) + 1)
         return calcsize(self.fmt)
 
     def serialize(self):
-        self.fmt = "!i%ss" % len(self.search_criteria)
-        self.body = pack(self.fmt,
-                                self.min_speed,
-                                self.search_criteria)
-        return self.body
+        self.fmt = "!B%ss" % (len(self.search_criteria) + 1)        
+        body = pack(self.fmt, self.min_speed, self.search_criteria)
+        return body
 
-    def deserialize(self, raw_data = ""):
-        """
-        Return a tuple of (min_speed, search_criteria)
-        """
-        if raw_data is "":
-            raw_data = self.body
-        return unpack(self.fmt, raw_data)
+    def deserialize(self, raw_data):
+        if len(raw_data) > 1 and raw_data[1:].count('\0') > 0:
+            self.min_speed = unpack('!B', raw_data[0])
+            raw_data = raw_data[1:]            
+            self.search_criteria = self.raw_data[:raw_data.index('\0')]
+            return 2+len(self.search_criteria)
+        else:
+            return None        
 
 class QueryHitBody(IMessageBody):
     """
@@ -154,7 +154,7 @@ class QueryHitBody(IMessageBody):
     result set include file index, file size, and file name
     """
 
-    def __init__(self, message, ip, port, speed, result_set, servent_id, num_of_hits):
+    def __init__(self, message, num_of_hits = None, ip = None, port = None, speed = None, result_set = None, servent_id = None):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.QUERYHIT)
         self.ip = ip
@@ -163,7 +163,6 @@ class QueryHitBody(IMessageBody):
         self.result_set = result_set
         self.servent_id = servent_id
         self.num_of_hits = num_of_hits
-
         self.fmt = ""
         self.body = ""
         return
@@ -194,7 +193,7 @@ class QueryHitBody(IMessageBody):
                                           result['file_name'])
         return self.body
 
-    def deserialize(self, raw_data = ""):
+    def deserialize(self, raw_data):
         """
         Return a tuple of (ip, port, speed, servent_id, 
                            file_index, file_size, file_name

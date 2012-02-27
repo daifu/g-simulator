@@ -1,16 +1,21 @@
 import logging
-import hashlib
-import struct
+from struct import unpack, pack, calcsize
+from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
 
 class Message:
-    def __init__(self, message_id, ttl = 7, hops = 0):
-        self.logger = logging.getLogger(__name__)
+    # count in byte
+    MAXIMUM_SUM_TTL_HOPS = 7
+    
+    def __init__(self, message_id = None, ttl = 7, hops = 0):
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.message_id = message_id
         self.ttl = ttl
         self.hops = hops
         self.body = None
         self.payload_length = None
         self.payload_descriptor = None
+        self.fmt = '!16sbbbI'
+        self.HEADER_LENGTH = calcsize(self.fmt)
         
     def set_body(self, body):
         self.body = body
@@ -48,19 +53,40 @@ class Message:
     def increase_hop(self, value=1):
         self.hop = self.hop + value
     
-    def serialize(self):        
-        m = hashlib.md5()
-        # TODO: generate message id
-        m.update("This need to be change")
-        message_id = m.digest()        
+    def serialize(self):             
         payload = self.body.serialize()
         self.payload_length = len(payload)
-        header = struct.pack('!bbbi', self.payload_descriptor, self.ttl, self.hops, self.payload_length)        
-        return message_id + header + payload
+        header = pack(self.fmt, self.message_id, self.payload_descriptor, self.ttl, self.hops, self.payload_length)        
+        return header + payload
     
     def deserialize(self, raw_data):
-        # TODO: implement this function
-        pass
+        if len(raw_data) < self.HEADER_LENGTH:
+            return None
+        self.message_id, self.payload_descriptor, self.ttl, self.hops, self.payload_length = unpack(self.fmt, raw_data[:self.HEADER_LENGTH])
+        # Check for error heuristically in connection stream
+        if not (self.payload_descriptor == GnutellaBodyId.PING or self.payload_descriptor == GnutellaBodyId.PONG or self.payload_descriptor == GnutellaBodyId.PUSH or self.payload_descriptor == GnutellaBodyId.QUERY or self.payload_descriptor == GnutellaBodyId.QUERYHIT):
+            raise ValueError
+        if self.hops + self.ttl > self.MAXIMUM_SUM_TTL_HOPS:
+            raise ValueError
+        # shorten the raw_data to body
+        raw_data = raw_data[self.HEADER_LENGTH:]
+        if len(raw_data) < self.payload_length:
+            return None
+        # deserialize the body
+        if self.payload_descriptor == GnutellaBodyId.PING:
+            self.body = PingBody()
+        elif self.payload_descriptor == GnutellaBodyId.PONG:
+            self.body = PongBody()
+        elif self.payload_descriptor == GnutellaBodyId.PUSH:
+            self.body = PushBody()
+        elif self.payload_descriptor == GnutellaBodyId.QUERY:
+            self.body = QueryBody()
+        elif self.payload_descriptor == GnutellaBodyId.QUERYHIT:
+            self.body = QueryHitBody()
+        # final check if deserialize correctly with payload_length given in the header                              
+        if self.body.deserialize(raw_data[:self.payload_length]):
+            raise ValueError
+        return self.payload_length + self.HEADER_LENGTH
         
         
     

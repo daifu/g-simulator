@@ -124,7 +124,7 @@ class QueryBody(IMessageBody):
         if len(raw_data) > 1 and raw_data[1:].count('\x00') > 0:
             self.min_speed = unpack('!B', raw_data[0])
             raw_data = raw_data[1:]            
-            self.search_criteria = self.raw_data[:raw_data.index('\x00')]
+            self.search_criteria = raw_data[:raw_data.index('\x00')]
             return 2+len(self.search_criteria)
         else:
             return None        

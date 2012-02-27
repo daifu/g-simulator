@@ -92,36 +92,27 @@ class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
     """
-    def __init__(self, message, ip, port, file_index):
+    def __init__(self, servant_id, message, ip, port, file_index):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
+        self.servant_id = servant_id
         self.ip = ip
         self.port = port
         self.file_index = file_index
-
-        self.fmt = ""
-        self.body = ""
+        self.fmt = "!16sIIH"
         return
 
     def get_length(self):
         return calcsize(self.fmt)
 
     def serialize(self):
-        self.fmt = "!%ssi%ss" % (len(self.ip),
-                                 len(self.file_index))
-        self.body = pack(self.fmt, 
-                                self.ip, 
-                                self.port, 
-                                self.file_index)
-        return self.body
+        body = pack(self.fmt, self.servant_id, self.file_index, self.ip, self.port)
+        return body
 
     def deserialize(self, raw_data = ""):
-        """
-        Return a tuple of (ip, port, file_index)
-        """
-        if raw_data is "":
-            raw_data = self.body
-        return unpack(self.fmt, raw_data)
+        if not len(raw_data) == self.length():
+            return None        
+        self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data)
 
 
 class QueryBody(IMessageBody):

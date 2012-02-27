@@ -13,7 +13,7 @@ class IMessageBody:
     This is the interface for all message body in Gnutella network
     """
     def __init__(self, message):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.message = message
         self.message.set_body(self)
         return

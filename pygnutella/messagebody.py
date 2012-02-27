@@ -80,10 +80,10 @@ class PushBody(IMessageBody):
     """
     Push body include Servent Identifier, File Index, IP Address, Port
     """
-    def __init__(self, message, servant_id = None, ip = None, port = None, file_index = None):
+    def __init__(self, message, servent_id = None, ip = None, port = None, file_index = None):
         IMessageBody.__init__(self, message)
         self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
-        self.servant_id = servant_id
+        self.servent_id = servent_id
         self.ip = ip
         self.port = port
         self.file_index = file_index
@@ -91,7 +91,7 @@ class PushBody(IMessageBody):
         return
 
     def serialize(self):
-        body = pack(self.fmt, self.servant_id, self.file_index, self.ip, self.port)
+        body = pack(self.fmt, self.servent_id, self.file_index, self.ip, self.port)
         return body
 
     def deserialize(self, raw_data):
@@ -120,10 +120,10 @@ class QueryBody(IMessageBody):
         return body
 
     def deserialize(self, raw_data):
-        if len(raw_data) > 1 and raw_data[1:].count('\0') > 0:
+        if len(raw_data) > 1 and raw_data[1:].count('\x00') > 0:
             self.min_speed = unpack('!B', raw_data[0])
             raw_data = raw_data[1:]            
-            self.search_criteria = self.raw_data[:raw_data.index('\0')]
+            self.search_criteria = self.raw_data[:raw_data.index('\x00')]
             return 2+len(self.search_criteria)
         else:
             return None        
@@ -144,34 +144,42 @@ class QueryHitBody(IMessageBody):
         self.result_set = result_set
         self.servent_id = servent_id
         self.num_of_hits = num_of_hits
-        self.fmt = ""
-        self.body = ""
         return
 
-    #No idea how to implement the result_set
     def serialize(self):
-        self.fmt = "!%ssii%ss" % (len(self.ip),
-                                  len(self.servent_id))
-        self.body = pack(self.fmt, 
-                                self.ip, 
-                                self.port, 
-                                self.speed, 
-                                self.servent_id)
-
-        #for the result_set, loop through it and append
-        #it to fmt
-        fmt = ""
+        body = pack("!BHII", self.num_of_hits, self.port, self.ip, self.speed)
         for result in self.result_set:
-            fmt = "%ssi%ss" % (len(result['file_index']),
-                                len(result['file_name']))
-            self.fmt += fmt
-            fmt = '!' + fmt
-            self.body += pack(fmt, result['file_index'],
-                                          result['file_size'],
-                                          result['file_name'])
-        return self.body
+            fmt = "!iI%ss" % (len(result['file_name'])+2)                        
+            body += pack(fmt, result['file_index'], result['file_size'], result['file_name'])
+        return body + self.servent_id
 
     def deserialize(self, raw_data):
-        if raw_data is "":
-            raw_data = self.body
-        return unpack(self.fmt, raw_data)
+        # total_size maintain number of bytes used up in deserialize
+        total_size = 0
+        fmt = "!BHII"
+        size = calcsize(fmt)
+        if len(raw_data) > size:
+            self.num_of_hits, self.port, self.ip, self.speed = unpack(fmt, raw_data)
+            self.result_set = []
+            raw_data = raw_data[size:]
+            total_size += size
+            fmt = "!iI"
+            size = calcsize(fmt)
+            for _ in range(0, self.num_of_hits):
+                if len(raw_data) < size:
+                    return None
+                file_index, file_size = unpack(fmt, raw_data)
+                raw_data = raw_data[size:]
+                total_size += size
+                if raw_data.count('\x00\x00') == 0:
+                    return None
+                file_name = raw_data[:raw_data.index('\x00\x00')]
+                raw_data = raw_data[len(file_name)+2:]
+                total_size += len(file_name)+2
+                self.result_set.append({'file_index': file_index, 'file_size': file_size, 'file_name': file_name})
+            if len(raw_data) < 6:
+                return None
+            self.servent_id = raw_data[:6]
+            return total_size + 6                   
+        else:
+            return None

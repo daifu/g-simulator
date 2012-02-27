@@ -1,6 +1,7 @@
 import asyncore
 import logging
 import socket
+from handshake import HandShake, HandShakeState
 
 class Reactor:
     """
@@ -12,16 +13,20 @@ class Reactor:
         
         1. Initialization:
         reactor = Reactor()
-        reactor.install_handlers(connector, receiver, disconnector, error)
+        reactor.install_handlers(acceptor, connector, receiver, disconnector, error)
         
         Handlers API and associated event and explainations
-        + connector(peer_id): 
-            call either after accepted an incoming connection or after successfully establish an outgoing connection
-        + receiver(peer_id, message): 
+        + acceptor():
+            call during handshake to ask Servant if they want to accept a gnutella connection
+            sent during handshake. return True for accepting
+        + connector(connection_handler): 
+            call either after accepted an incoming connection or after successfully establish an outgoing connection i.e. 
+            performance handshake successfully
+        + receiver(connection_handler, message): 
             call when you receive a message which is defined by message.deserialize()
-        + disconnector(peer_id): 
+        + disconnector(connection_handler): 
             call AFTER connection is closed
-        + error(peer_id, errno): 
+        + error(connection_handler, errno): 
             call when an error raised
         + peer_id SHOULD NOT be used in anyway except to identify the connection
         
@@ -34,38 +39,44 @@ class Reactor:
         
         OR
         reactor.make_outgoing_connection(address)
-        + address is a tuple of (addr, port)
-        
+        + address is a tuple of (addr, port)        
     """
+    
     def __init__(self, address):
-        self.logger = logging.getLogger(__name__)        
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         self.connector = None
         self.disconnector = None
         self.error = None
         self.receiver = None
-        self.channels = {}
+        self.acceptor = None
+        self.channels = []
         self.logger.debug("reactor.__init__()")
         handler = ServerHandler(reactor = self, address = address)
-        self.add(hash(handler.socket), handler)
+        self.add_channel(handler)
         return
     
-    def send(self, peer_id, message):
-        self.logger.debug("send() -> %s", message)
-        #there is a problme for the peer_id
-        #self.channels[peer_id].send_message(message)
+    def send(self, handler, message):
+        self.logger.debug("send() -> %s", message.serialize())        
+        handler.send_message(message)
         return
     
-    def add(self, peer_id, handler):
-        self.logger.debug("add() -> peer_id = %s", peer_id)
-        self.channels[peer_id] = handler
+    def broadcast_except_for(self, handler, message):
+        self.logger.debug("send() -> %s", message.serialize())
         return
     
-    def remove(self, peer_id):
-        self.logger.debug("remove() -> peer_id = %s", peer_id)
-        del self.channels[peer_id]
+    def add_channel(self, handler):        
+        self.channels.append(handler)
+        return
     
-    def install_handlers(self, connector, receiver, disconnector, error):
+    def remove_channel(self, handler):        
+        try:                
+            self.channels.remove(handler)
+        except ValueError:
+            pass        
+    
+    def install_handlers(self, acceptor, connector, receiver, disconnector, error):
         self.logger.debug("install_handlers()")
+        self.acceptor = acceptor
         self.connector = connector
         self.receiver = receiver
         self.disconnector = disconnector
@@ -74,14 +85,13 @@ class Reactor:
     
     def make_outgoing_connection(self, address):
         self.logger.debug("make_outgoing_connection() -> %s", address)
-        handler = ConnectionHandler(reactor = self)
-        handler.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.add(hash(handler.socket), handler)
+        ConnectionHandler(reactor = self, address = address)
         return
     
     def run(self):
-        if not (self.acceptor and self.disconnector and self.receiver and self.error):
+        if not (self.acceptor and self.connector and self.disconnector and self.receiver and self.error):
             raise ValueError
+        self.logger.debug("run()")
         asyncore.loop();
         return
 
@@ -91,7 +101,7 @@ class ServerHandler(asyncore.dispatcher):
     """
     def __init__(self, reactor, address):       
         self.reactor = reactor
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind(address)
@@ -103,18 +113,14 @@ class ServerHandler(asyncore.dispatcher):
     def handle_accept(self):
         sock, address = self.accept()
         self.logger.debug('handle_accept() -> %s', address)
-        handler = ConnectionHandler(reactor = self.reactor)
-        sock.setblocking(0)
-        handler.set_socket(sock = sock)
-        self.reactor.add(hash(sock), handler)
-        self.reactor.connector(sock)                
+        ConnectionHandler(reactor = self.reactor, sock=sock)
         return
     
     def handle_close(self):
         self.logger.debug('handle_close()')
         self.close()
-        self.reactor.disconnector(self.socket)
-        self.reactor.remove(hash(self.socket))        
+        self.reactor.disconnector(self)
+        self.reactor.remove_channel(self)        
         return
     
 class ConnectionHandler(asyncore.dispatcher):
@@ -128,41 +134,71 @@ class ConnectionHandler(asyncore.dispatcher):
         sock.setblocking(0)
         handler.set_socket(sock = sock)
     """
-    def __init__(self, reactor, chunk_size=512):        
-        self.logger = logging.getLogger(__name__)
+    # TODO: adding handshake
+    
+    def __init__(self, reactor, address = None, sock = None, chunk_size=512):        
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
+        self.data_to_write = ''
+        self.received_data = ''
         self.reactor = reactor
-        self.chunk_size = chunk_size
-        self.data_to_write = b''
-        self.received_data = b''
-        asyncore.dispatcher.__init__(self)
+        self.chunk_size = chunk_size                                 
+        if address:
+            self.handshake_state = HandShakeState.SENDING_WELCOME
+            self.data_to_write = HandShake.WELCOME_MESSAGE   
+            asyncore.dispatcher.__init__(self)
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.logger.debug('connecting to %s', address)
+            self.connect(address)
+        elif sock:
+            self.handshake_state = HandShakeState.RECEIVING_WELCOME            
+            asyncore.dispatcher.__init__(self, sock=sock)
+        else:
+            raise ValueError                                        
         return
     
     def send_message(self, message):
+        # Block all message until
+        if not self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
+            return
         self.logger.debug('send_message() -> %s', message)
         self.data_to_write += message.serialize()
         return
-    
+            
     def writable(self):
         response = bool(self.data_to_write)
         self.logger.debug('writable() -> %s', response)
         return response
     
-    def handle_connect(self):
+    def handle_connect(self):        
         self.logger.debug('handle_connect()')
-        self.reactor.connector(self.socket) # FIXED THIS
         return
     
     def handle_close(self):
         self.logger.debug('handle_close()')        
         self.close()
-        self.reactor.disconnector(self.socket)
-        self.reactor.remove(self.socket)        
+        if self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
+            self.reactor.disconnector(self)
+            self.reactor.remove_channel(self)        
         return
     
-    def handle_read(self):
+    def handle_read(self):        
         self.logger.debug('handle_read()')
         self.received_data += self.recv(self.chunk_size)
-        # TODO: deserialize the receive_data
+        print self.received_data
+        if self.handshake_state == HandShakeState.RECEIVING_WELCOME and self.received_data[:len(HandShake.WELCOME_MESSAGE)]:
+            if self.reactor.acceptor():
+                self.received_data = self.received_data[len(HandShake.WELCOME_MESSAGE):]
+                self.handshake_state = HandShakeState.SENDING_RESPONSE
+                self.data_to_write = HandShake.RESPONSE_MESSAGE
+            else:
+                self.handle_close()
+        elif self.handshake_state == HandShakeState.RECEIVING_RESPONSE and self.received_data[:len(HandShake.RESPONSE_MESSAGE)]:
+            self.handshake_state = HandShakeState.COMPLETED_AND_SUCCEEDED
+            self.reactor.add_channel(self)
+            self.reactor.connector(self)            
+        else:
+            # TODO: deserialize the receive_data
+            pass
         return
     
     def handle_write(self):
@@ -172,10 +208,12 @@ class ConnectionHandler(asyncore.dispatcher):
         sent = self.send(self.data_to_write)
         self.logger.debug('handle_write() -> (%d) %s', sent, self.data_to_write[:sent])
         self.data_to_write = self.data_to_write[sent:]
+        # Maintain Handshake state machine
+        if self.handshake_state == HandShakeState.SENDING_WELCOME and self.data_to_write == '':
+            self.handshake_state = HandShakeState.RECEIVING_RESPONSE
+        if self.handshake_state == HandShakeState.SENDING_RESPONSE and self.data_to_write == '':
+            self.handshake_state = HandShakeState.COMPLETED_AND_SUCCEEDED
+            self.reactor.add_channel(self)
+            self.reactor.connector(self)   
         return
     
-    def handle_error(self):
-        self.logger.debug('handle_error()')
-        # TODO: this too
-        self.reactor.error(self.socket, 1)
-        return        

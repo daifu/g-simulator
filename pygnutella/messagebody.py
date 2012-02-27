@@ -71,9 +71,9 @@ class PongBody(IMessageBody):
     def deserialize(self, raw_data):        
         if not len(raw_data) == self.__length:
             return None
-        self.port = unpack('!H', raw_data)
-        self.ip = unpack('<L', raw_data[2:])
-        self.num_of_files, self.num_of_kb = unpack('!II', raw_data[6:])
+        self.port = unpack('!H', raw_data[:2])[0]
+        self.ip = unpack('<L', raw_data[2:6])[0]        
+        self.num_of_files, self.num_of_kb = unpack('!II', raw_data[6:14])
         return self.__length
 
 class PushBody(IMessageBody):
@@ -98,7 +98,7 @@ class PushBody(IMessageBody):
         size = calcsize(self.fmt)
         if not len(raw_data) == size:
             return None        
-        self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data)
+        self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data[:size])
         return size
 
 
@@ -160,7 +160,7 @@ class QueryHitBody(IMessageBody):
         fmt = "!BHLI"
         size = calcsize(fmt)
         if len(raw_data) > size:
-            self.num_of_hits, self.port, self.ip, self.speed = unpack(fmt, raw_data)
+            self.num_of_hits, self.port, self.ip, self.speed = unpack(fmt, raw_data[:size])
             self.result_set = []
             raw_data = raw_data[size:]
             total_size += size
@@ -169,7 +169,7 @@ class QueryHitBody(IMessageBody):
             for _ in range(0, self.num_of_hits):
                 if len(raw_data) < size:
                     return None
-                file_index, file_size = unpack(fmt, raw_data)
+                file_index, file_size = unpack(fmt, raw_data[:size])
                 raw_data = raw_data[size:]
                 total_size += size
                 if raw_data.count('\x00\x00') == 0:

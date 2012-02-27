@@ -98,7 +98,7 @@ class PushBody(IMessageBody):
         size = calcsize(self.fmt)
         if not len(raw_data) == size:
             return None        
-        self.servant_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data[:size])
+        self.servent_id, self.file_index, self.ip, self.port = unpack(self.fmt, raw_data[:size])
         return size
 
 

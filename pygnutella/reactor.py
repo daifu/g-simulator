@@ -85,11 +85,11 @@ class Reactor:
         ConnectionHandler(reactor = self, address = address)
         return
     
-    def run(self):
+    def run(self, timeout = 30):
         if not (self.acceptor and self.connector and self.disconnector and self.receiver):
             raise ValueError
-        self.logger.debug("run()")
-        asyncore.loop();
+        self.logger.debug("run(%s)", timeout)
+        asyncore.loop(timeout);
         return
 
 class ServerHandler(asyncore.dispatcher):

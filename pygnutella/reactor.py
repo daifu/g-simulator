@@ -132,9 +132,7 @@ class ConnectionHandler(asyncore.dispatcher):
         If incoming, user simply create handler and call
         sock.setblocking(0)
         handler.set_socket(sock = sock)
-    """
-    # TODO: adding handshake
-    
+    """    
     def __init__(self, reactor, address = None, sock = None, chunk_size=512):        
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.data_to_write = ''

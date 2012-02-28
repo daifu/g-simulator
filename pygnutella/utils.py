@@ -12,7 +12,7 @@ def num_to_dotted_quad(n):
       
 def make_mask(n):
     "return a mask of n bits as a long integer"
-    return (2L<<n-1)-1
+    return 0xFFFFFFFF ^ ((1<<(n-1))-1)
 
 def ip_to_net_and_host(ip, maskbits):
     "returns tuple (network, host) dotted-quad addresses given IP and mask size"

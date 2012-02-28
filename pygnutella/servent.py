@@ -1,8 +1,8 @@
 import logging
+import uuid
 from reactor import Reactor
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
 from message import Message
-
 
 # struct of file, each servent have an array/list of these files
 class FileInfo:
@@ -23,28 +23,31 @@ class ServentList:
 class Servent:
     def __init__(self, port, files = []):
         self.logger = logging.getLogger(__name__)
-        self.port = port
         self.files = files
-        # a dict that map message_id to a servent
+        # push_list: message_id of ping message -> connection_handlers
         self.ping_list = {}
-        # a dict that map message_id to a servent
+        # push_list: message_id of query message -> connection_handlers
         self.query_list = {}
-        # a dict that map message_id to a servent  
+        # push_list: message_id of push message -> connection_handlers  
         self.push_list = {}
         # create Reactor class for socket management
         self.reactor = Reactor(port)
         self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)
-        # TODO: create servent id
-        self.id = ''
+        # create servent id
+        self.id = uuid.uuid1().bytes
         return
     
     def on_accept(self):
+        """
+        on event of gnutella connection, accept or refuse depends on
+        resource management
+        """
         # Always accept new connection
         return True
     
     def on_connect(self, connection_handler):
         """ 
-        what to do when a servent connects to 
+        on event of a servent connects to 
         """
         # Create and send a ping message
         self.create_message(connection_handler, GnutellaBodyId.PING)
@@ -52,78 +55,69 @@ class Servent:
 
     def on_receive(self, connection_handler, message):
         """ 
-        servent behavior when receiving a message 
+        on event of receiving a message from an existing connection 
         """
         self.logger.debug('Receive message from %s', connection_handler.socket.getsockname())
         # decrease ttl and increase hop
         ttl = message.get_ttl()
         hops = message.get_hops()
-        message_id = message.get_message_id()
-        # if ttl = 0, the message is "dead", do not need to forward it
-        if message.get_payload_descriptor() == GnutellaBodyId.PING:
-            # TODO            
-            # Iplementation: - search through the servent's neighbor peer_id
-            # list and send ping message to any peer not the one who the servent
-            # get the PING from and 1 hop from the servent
-            #                - respond peer_id with PONG
-            #                - add the servent that send the PING to this servent's
-            #                  ping-list            
-            self.create_message(connection_handler, GnutellaBodyId.PONG, 7, 0, message_id)
-            new_servent.peer_id = peer_id;
-            new_servent.hop = 1;
-            self.add_to_ping_list(new_servent, message_id)
-
-            # send PING to any neighbor that not the one servent recceived the PING from
-            if ttl > 1:
-                for item in self.get_peer_id_set:
-                    if item.peer_id != peer_id and item.hop_num == 1:
-                        self.create_meassage(item.peer_id, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
-                
-        if message.get_payload_descriptor() == GnutellaBodyId.PONG:
-            # TODO            
-            # Implementation: - search the ping_list and forward the PONG message if ttl > 0
-            if ttl > 1:
-                return_peer_id = self.ping_list[message_id].peer_id
-                self.create_message(return_peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
-
-        if message.get_payload_descriptor() == GnutellaBodyId.QUERY:
-            # servent behavior when receiving QUERY message
-            """
-            Implementation: - add the servent to query_list
-                            - search the file list for the criteria, if it hit,
-            return with query hit
-                            - send query to neighbor servent
-            """
-            new_servent.peer_id = peer_id;
-            new_servent.hop = 1;
-            self.add_to_query_list(new_servent, message_id)
-
-            if self.search_criteria(criteria) == True:
-                self.create_message(peer_id, GnutellaBodyId.QUERY, ttl-1, hop+1, message_id)
-
-            # send PING to any neighbor that not the one servent recceived the QUERY from
-            if ttl > 1:
-                for item in self.get_peer_id_set:
-                    if item.peer_id != peer_id and item.hop_num == 1:
-                        self.create_meassage(item.peer_id, GnutellaBodyId.QUERY, ttl-1, hops+1, message_id)
-            
-        if message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
-            # TODO
-            # servent behavior when receiving QUERYHIT message
-            pass
-        if message.get_payload_descriptor() == GnutellaBodyId.PUSH:
-            # TODO
-            # servent behavior when receiving PUSH message
-            pass
+        message_id = message.get_message_id()        
+        # Routing only if time to live > 1
+        if ttl > 1:                
+            if message.get_payload_descriptor() == GnutellaBodyId.PING:                     
+                # send Ping to any neighbor that not the one servent recceived the Ping from
+                self.forward_ping(connection_handler, message_id, ttl-1, hops+1)
+                # add ping message_id to seem list to forward pong later
+                self.ping_list[message_id] = connection_handler
+                # reply with Pong (the return trip's ttl should be equals to hops)
+                pong_message = Message(message_id, hops, 0)
+                # TODO: fixed number of files share and number of kilobyte shared              
+                PongBody(pong_message, self.reactor.ip, self.reactor.port, 2, 2)
+                connection_handler.send_message(pong_message)
+            elif message.get_payload_descriptor() == GnutellaBodyId.PONG:
+                # Forward pong back on the same path                
+                try:
+                    message.decrease_ttl()
+                    message.increase_hop()
+                    self.ping_list[message_id].send_message()
+                except KeyError:
+                    pass
+            elif message.get_payload_descriptor() == GnutellaBodyId.QUERY:
+                # TODo
+                # servent behavior when receiving QUERY message
+                pass
+            elif message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
+                # TODO
+                # servent behavior when receiving QUERYHIT message
+                pass
+            elif message.get_payload_descriptor() == GnutellaBodyId.PUSH:
+                # TODO
+                # servent behavior when receiving PUSH message
+                pass
+            else:
+                raise ValueError
             
     def on_disconnect(self, connection_handler):
-        """ servent behavior when leaving the network """
-        # TODO
+        """ 
+        servent behavior when leaving the network 
+        """
         self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
-        pass
+        # TODO: resource clean up i.e. ping_list, etc...
+        return
+    
+    def forward_ping(self, connection_handler, message_id, ttl, hops):
+        """
+        Forward Ping packet to every directly connected servent
+        """
+        message = Message(message_id, ttl, hops)
+        PingBody(message)
+        self.reactor.broadcast_except_for(connection_handler, message)
+        return
+    
     # each member of files is a FileInfo    
     def set_files(self, files):
         self.files = files
+        return
 
     def get_files(self, files):
         return files
@@ -139,100 +133,7 @@ class Servent:
                 return True
         return False
 
-    def get_result_set(self, criteria):
-        """
-        search the file array to file the file with the criteria and put it
-        into result set
-        """
-        # TODO
-        return self.result_set
-
-    def search_criteria(self, criteria):
-        # TODO
+    def search(self, criteria):
         # search the files with criteria
-        return False
-    
-    def get_peer_id_set(self):
-        """
-        get a set of peer_id that the servent currently connect to
-        """
-        # TODO
-        return self.peer_id_set
-
-    def add_to_ping_list(self, new_servent, message_id):
-        """
-        add a peer's id that send a ping message to ping_list
-        """
-        # just gieve it a try, should test it somehow
-        self.ping_list[message_id] = new_servent
-        
-    def get_ping_list(self):
-        """
-        a list/array of serventand message_id that the servent receive the ping from
-        """
-        # TODO
-        # right now just need a method to make it work
-        return self.ping_list
-
-    def add_to_query_list(self, new_servent, message_id):
-        """
-        add a peer's id that send a query message to query_list
-        """
-        self.query_list[message_id] = new_servent
-
-    def get_query_list(self):
-        """
-        a list/array of serventand message_id that the servent receive the ping from
-        """
-        return self.query_list
-    
-    # TODO
-    # set and get methods for: hostName/ip, portNum, nums_files_share and array_of_file_share 
-    # 1 more get and set method for something called Reactor (socketPool)
-    # as Howard want
-
-    def create_message(self, peer_id, body_id, message_id, ttl = 7, hops = 0):
-        """ 
-        creating a message, not sure if the input argument is enough
-        this also send the message after creating it
-        """
-        # Create message
-        message = Message(ttl, hops, message_id)
-        # Create message body
-        if body_id == GnutellaBodyId.PING:
-            body = PingBody(message)
-        elif body_id == GnutellaBodyId.PONG:
-            # create pong body data
-            ip = self.ip
-            port = self.port
-            num_of_files = self.get_files 
-            num_of_kb = 0 #  TODO: get the real number
-            body = PongBody(message, ip, port, num_of_files, num_of_kb)
-        elif body_id == GnutellaBodyId.QUERY:
-            # create query body data
-            min_speed = 100 # default is 100 kB/sec
-            search_criteria = '' # TODO: get the real string
-            body = QueryBody(message, min_speed, search_criteria)
-        elif body_id == GnutellaBodyId.QUERYHIT:
-            # create queryhit body data
-            ip = self.ip
-            port = self.port
-            speed = 100 # default is 100 kB/sec
-            result_set = [] # TODO: create real resut set
-            servent_id = self.id
-            num_of_hits = 0 # TODO: create number of hits
-            body = QueryHitBody(message, ip, port, speed, 
-                                result_set, servent_id, num_of_hits)
-        elif body_id == GnutellaBodyId.PUSH:
-            # create push body data
-            ip = self.ip
-            port = self.port
-            file_index = '' # TODO: a index that find the file from the servent
-            body = PushBody(message, ip, port, file_index)
-        else:
-            return
-        # Put body into the message        
-        message.set_body(body)
-        message.set_payload_length(body.get_length()) # get body length
-        # Send message to peer with peer_id
-        self.reactor.send(peer_id, message)        
+        # TODO: right now, return empty list                
+        return []    

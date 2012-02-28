@@ -1,4 +1,3 @@
-# -*- coding: cp1252 -*-
 import logging
 from reactor import Reactor
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
@@ -22,18 +21,16 @@ class ServentList:
     message_id = 0
     
 class Servent:
-    def __init__(self, ip, port, files = []):
+    def __init__(self, port, files = []):
         self.logger = logging.getLogger(__name__)
-        self.ip = ip
         self.port = port
         self.files = files
 
-        self.peer_id_set = [] # array of servent info
         self.ping_list = {} # a dict that map message_id to a servent
         self.query_list = {} # a dict that map message_id to a servent 
         self.push_list = {} # a dict that map message_id to a servent
         
-        self.reactor = Reactor((ip, port))
+        self.reactor = Reactor(port)
         # TODO: fix this
         self.reactor.install_handlers(None, None, None, None)
         # TODO: create servent id
@@ -155,32 +152,33 @@ class Servent:
         # Send message to peer with peer_id
         self.reactor.send(peer_id, message)
         
-    def on_connect(self, peer_id):
-        """ what to do when a servent connect to a network """
+    def on_connect(self, connection_handler):
+        """ 
+        what to do when a servent connect to a network 
+        """
         # Servent create and send a ping message
-        self.create_message(peer_id, GnutellaBodyId.PING)
+        self.create_message(connection_handler, GnutellaBodyId.PING)
+        return
 
-    def on_receive(self, peer_id, message):
-        """ servent behavior when receiving a message """
-        logging.debug('Receive message from ' + peer_id + '\n')
-
-        """ decrease ttl and increase hop """
+    def on_receive(self, connection_handler, message):
+        """ 
+        servent behavior when receiving a message 
+        """
+        self.logger.debug('Receive message from %s', connection_handler.socket.getsockname())
+        # decrease ttl and increase hop
         ttl = message.get_ttl()
         hops = message.get_hops()
         message_id = message.get_message_id()
-
-        """ if ttl = 0, the message is "dead", do not need to forward it """
+        # if ttl = 0, the message is "dead", do not need to forward it
         if message.get_payload_descriptor() == GnutellaBodyId.PING:
-            # TODO
-            """
-            Implementation: - search through the servent's neighbor peer_id
-            list and send ping message to any peer not the one who the servent
-            get the PING from and 1 hop from the servent
-                            - respond peer_id with PONG
-                            - add the servent that send the PING to this servent's
-                              ping-list
-            """
-            self.create_message(peer_id, GnutellaBodyId.PONG, 7, 0, message_id)
+            # TODO            
+            # Iplementation: - search through the servent's neighbor peer_id
+            # list and send ping message to any peer not the one who the servent
+            # get the PING from and 1 hop from the servent
+            #                - respond peer_id with PONG
+            #                - add the servent that send the PING to this servent's
+            #                  ping-list            
+            self.create_message(connection_handler, GnutellaBodyId.PONG, 7, 0, message_id)
             new_servent.peer_id = peer_id;
             new_servent.hop = 1;
             self.add_to_ping_list(new_servent, message_id)
@@ -192,11 +190,8 @@ class Servent:
                         self.create_meassage(item.peer_id, GnutellaBodyId.PING, ttl-1, hops+1, message_id)
                 
         if message.get_payload_descriptor() == GnutellaBodyId.PONG:
-            # TODO
-            """
-            Implementation: - search the ping_list and forward the PONG message
-            if ttl > 0
-            """
+            # TODO            
+            # Implementation: - search the ping_list and forward the PONG message if ttl > 0
             if ttl > 1:
                 return_peer_id = self.ping_list[message_id].peer_id
                 self.create_message(return_peer_id, GnutellaBodyId.PONG, ttl-1, hop+1, message_id)
@@ -213,7 +208,7 @@ class Servent:
             new_servent.hop = 1;
             self.add_to_query_list(new_servent, message_id)
 
-            if search_criteria(criteria) == True:
+            if self.search_criteria(criteria) == True:
                 self.create_message(peer_id, GnutellaBodyId.QUERY, ttl-1, hop+1, message_id)
 
             # send PING to any neighbor that not the one servent recceived the QUERY from
@@ -231,12 +226,8 @@ class Servent:
             # servent behavior when receiving PUSH message
             pass
             
-    def on_disconnect(self, peer_id):
+    def on_disconnect(self, connection_handler):
         """ servent behavior when leaving the network """
         # TODO
-        logging.debug(peer_id + ': disconneting from the network\n')
-    
-    def on_error(self, peer_id):
-        """ servent behavior when timeout and/or pause message """
-        # TODO
-        logging.debug(peer_id + ': error occur\n')
+        self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
+        pass

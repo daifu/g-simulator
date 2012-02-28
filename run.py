@@ -17,7 +17,7 @@ def disconnector(connection_handler):
     print "disconnected"
 
 def receiver(connection_handler, message):
-    print "receiving message = ", message.serialize()
+    print "receiving message = ", repr(message.serialize())
     print "message len = ", len(message.serialize())
     return
 

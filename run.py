@@ -2,25 +2,25 @@ from pygnutella.reactor import Reactor
 import logging
 import sys
 
-def connector(peer_id):
-    print "connecting %s", peer_id
+def connector(connection_handler):
+    print "connecting %s", connection_handler.socket.getsockname()
     
 def acceptor():
     return True
 
-def disconnector(peer_id):
-    print "disconnected %s", peer_id
+def disconnector(connection_handler):
+    print "disconnected"
 
-def error(peer_id, errno):
-    print "error peer_id = %s errno = %s", peer_id, errno
+def error(connection_handler, errno):
+    print "error connection_handler = %s errno = %s", connection_handler.socket.getsockname(), errno
 
-def receiver(peer_id , message):
-    print "receiving peer_id = ", peer_id
+def receiver(connection_handler, message):
+    print "receiving connection_handler = ", connection_handler.socket.getsockname()
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)-6s %(name)s: %(message)s')                        
-    reactor = Reactor(('localhost', 0)) # let the kernel give us a port
+    logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')                        
+    reactor = Reactor()
     reactor.install_handlers(acceptor, connector, receiver, disconnector, error)
-    if len(sys.argv) > 1:
-        reactor.make_outgoing_connection(('localhost', int(sys.argv[1])))
+    if len(sys.argv) > 2:
+        reactor.make_outgoing_connection((sys.argv[1], int(sys.argv[2])))
     reactor.run()

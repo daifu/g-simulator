@@ -1,8 +1,7 @@
 from nose.tools import *
 from pygnutella.messagebody import PingBody, PongBody, QueryBody, QueryHitBody, PushBody
 from pygnutella.message import Message
-from pygnutella.utils import *
-import socket
+from pygnutella.utils import dotted_quad_to_num
 
 def test_PingBody():
     message = Message('')
@@ -13,7 +12,7 @@ def test_PingBody():
 def test_PongBody():
     message = Message('')
     # convert decimal dotted quad string to long integer
-    ip = dottedQuadToNum('127.0.0.1') 
+    ip = dotted_quad_to_num('127.0.0.1') 
     port = 5000 
     num_of_files = 1 
     num_of_kb = 255 
@@ -60,7 +59,7 @@ def test_QueryBody():
     
 def test_QueryHitBody():
     message = Message('')
-    ip = dottedQuadToNum('127.0.0.1')
+    ip = dotted_quad_to_num('127.0.0.1')
     port = 59850
     speed = 100 
     result_set = [{
@@ -99,7 +98,7 @@ def test_QueryHitBody():
 
 def test_PushBody():
     message = Message('')
-    ip = dottedQuadToNum('127.0.0.1')
+    ip = dotted_quad_to_num('127.0.0.1')
     port = 5000
     file_index = 2565
     servent_id = 'thisisservent_id'

@@ -22,7 +22,7 @@ class ServentList:
     
 class Servent:
     def __init__(self, port, files = []):
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.files = files
         # push_list: message_id of ping message -> connection_handlers
         self.ping_list = {}

@@ -3,8 +3,7 @@ from pygnutella.reactor import Reactor
 
 def setup_func():
     global reactor
-    address = ('127.0.0.1', 9990)
-    reactor = Reactor(address)
+    reactor = Reactor()
     assert_not_equal(reactor.channels, [])
 
 @with_setup(setup_func)

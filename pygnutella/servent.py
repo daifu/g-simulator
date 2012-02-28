@@ -79,7 +79,7 @@ class Servent:
                 try:
                     message.decrease_ttl()
                     message.increase_hop()
-                    self.ping_list[message_id].send_message()
+                    self.ping_list[message_id].send_message(message)
                 except KeyError:
                     pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERY:
@@ -95,9 +95,13 @@ class Servent:
                     # TODO: send QueryHit back
                     pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
-                # TODO
                 # servent behavior when receiving QUERYHIT message
-                pass
+                try:
+                    message.decrease_ttl()
+                    message.increase_hop()
+                    self.query_list[message_id].send_message(message)
+                except KeyError:
+                    pass
             elif message.get_payload_descriptor() == GnutellaBodyId.PUSH:
                 # TODO
                 # servent behavior when receiving PUSH message

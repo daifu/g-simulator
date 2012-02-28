@@ -2,6 +2,7 @@ import asyncore
 import logging
 import socket
 from handshake import HandShake, HandShakeState
+from message import Message
 
 class Reactor:
     """
@@ -26,8 +27,6 @@ class Reactor:
             call when you receive a message which is defined by message.deserialize()
         + disconnector(connection_handler): 
             call AFTER connection is closed
-        + error(connection_handler, errno): 
-            call when an error raised
         
         2. Event Loop:
         reactor.run()
@@ -73,13 +72,12 @@ class Reactor:
         except ValueError:
             pass        
     
-    def install_handlers(self, acceptor, connector, receiver, disconnector, error):
+    def install_handlers(self, acceptor, connector, receiver, disconnector):
         self.logger.debug("install_handlers()")
         self.acceptor = acceptor
         self.connector = connector
         self.receiver = receiver
         self.disconnector = disconnector
-        self.error = error;
         return
     
     def make_outgoing_connection(self, address):
@@ -88,7 +86,7 @@ class Reactor:
         return
     
     def run(self):
-        if not (self.acceptor and self.connector and self.disconnector and self.receiver and self.error):
+        if not (self.acceptor and self.connector and self.disconnector and self.receiver):
             raise ValueError
         self.logger.debug("run()")
         asyncore.loop();
@@ -161,7 +159,7 @@ class ConnectionHandler(asyncore.dispatcher):
         # Block all message until
         if not self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
             return
-        self.logger.debug('send_message() -> %s', message)
+        self.logger.debug('send_message() -> %s', message.serialize())
         self.data_to_write += message.serialize()
         return
             
@@ -185,7 +183,6 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_read(self):        
         self.logger.debug('handle_read()')
         self.received_data += self.recv(self.chunk_size)
-        print self.received_data
         if self.handshake_state == HandShakeState.RECEIVING_WELCOME and self.received_data[:len(HandShake.WELCOME_MESSAGE)]:
             if self.reactor.acceptor():
                 self.received_data = self.received_data[len(HandShake.WELCOME_MESSAGE):]
@@ -195,11 +192,20 @@ class ConnectionHandler(asyncore.dispatcher):
                 self.handle_close()
         elif self.handshake_state == HandShakeState.RECEIVING_RESPONSE and self.received_data[:len(HandShake.RESPONSE_MESSAGE)]:
             self.handshake_state = HandShakeState.COMPLETED_AND_SUCCEEDED
+            self.received_data = self.received_data[len(HandShake.RESPONSE_MESSAGE):]
             self.reactor.add_channel(self)
             self.reactor.connector(self)            
         else:
-            # TODO: deserialize the receive_data
-            pass
+            try:
+                msg = Message()
+                msg_length = msg.deserialize(self.received_data)
+                if msg_length:
+                    self.reactor.receiver(self, msg)
+                    self.received_data = self.received_data[msg_length:]               
+            except ValueError:
+                # The message stream is messed up
+                self.logger.debug("handle_read() -> mesage stream is messed up")
+                self.handle_close()
         return
     
     def handle_write(self):

@@ -1,6 +1,7 @@
 import asyncore
 import logging
 import socket
+import utils
 from handshake import HandShake, HandShakeState
 from message import Message
 
@@ -107,8 +108,10 @@ class ServerHandler(asyncore.dispatcher):
         # bind socket to a public ip (not localhost or 127.0.0.1
         self.bind((socket.gethostname(), port))
         # get socket address for future use
-        self.address = self.socket.getsockname()
+        self.reactor.ip, self.reactor.port = self.socket.getsockname()
+        self.reactor.ip = utils.dotted_quad_to_num(self.reactor.ip)        
         self.logger.debug('ServerHandler binding to %s', self.socket.getsockname())
+        # listening for incoming connection
         self.listen(5)
         return
     

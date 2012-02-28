@@ -9,17 +9,7 @@ class FileInfo:
     file_id = 0
     file_name =  ""
     file_size = 0
-
-# a node is another servent, each servent have an array/list of other servents
-# in the network, up to 7 hops from it
-class ServentInfo:
-    peer_id = 0
-    hop_num = 0
-    
-class ServentList:
-    node = [] # node is another servent, refer to ServentInfo above
-    message_id = 0
-    
+   
 class Servent:
     def __init__(self, port, files = []):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
@@ -125,9 +115,9 @@ class Servent:
         message.increase_hop()
         self.reactor.broadcast_except_for(connection_handler, message)
         return
-    
-    # each member of files is a FileInfo    
+           
     def set_files(self, files):
+        # each member of files is a FileInfo 
         self.files = files
         return
 
@@ -140,8 +130,8 @@ class Servent:
         """
         # iterate through the file list fo find the file
         # files is array/dict, w/e of file_id
-        for item in self.files:
-            if item == file_id:
+        for fileinfo in self.files:
+            if fileinfo.file_id == file_id:
                 return True
         return False
 

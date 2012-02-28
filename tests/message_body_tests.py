@@ -25,7 +25,7 @@ def test_PongBody():
 
     #test serialize
     body = pong.serialize()    
-    body_expected_str = "\x13\x88\x7f\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xff"
+    body_expected_str = "\x13\x88\x01\x00\x00\x7f\x00\x00\x00\x01\x00\x00\x00\xff"
     assert_equal(body, body_expected_str)
 
     # test deserialize
@@ -84,7 +84,7 @@ def test_QueryHitBody():
 
     #test the serialize
     body = query_hit.serialize()
-    body_expected_str = "\x02\xe9\xca\x01\x00\x00\x7f\x00\x00\x00\x64\x00\x00\x0d\x6b\x00\x00\x00\x64a_name\x00\x00\x00\x00\x0d\xcf\x00\x00\x00\xc8b_name\x00\x00thisisservent_id"
+    body_expected_str = "\x02\xe9\xca\x7f\x00\x00\x01\x00\x00\x00\x64\x00\x00\x0d\x6b\x00\x00\x00\x64a_name\x00\x00\x00\x00\x0d\xcf\x00\x00\x00\xc8b_name\x00\x00thisisservent_id"
     assert_equal(body, body_expected_str)
     
     #test the deserialize
@@ -111,7 +111,7 @@ def test_PushBody():
 
     #test the serialize
     body = push.serialize()
-    body_expected_str = "thisisservent_id\x00\x00\x0a\x05\x01\x00\x00\x7f\x13\x88"
+    body_expected_str = "thisisservent_id\x00\x00\x0a\x05\x7f\x00\x00\x01\x13\x88"
     assert_equal(body, body_expected_str)
 
     # test the deserialize

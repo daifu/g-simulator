@@ -59,7 +59,10 @@ class Reactor:
         return
     
     def broadcast_except_for(self, handler, message):
-        self.logger.debug("send() -> %s", message.serialize())
+        self.logger.debug("broadcast_except_for() -> %s", message.serialize())
+        for connection_handler in self.channels:
+            if not connection_handler == handler:
+                connection_handler.send_message(message)
         return
     
     def add_channel(self, handler):        

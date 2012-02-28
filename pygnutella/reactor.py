@@ -28,7 +28,6 @@ class Reactor:
             call AFTER connection is closed
         + error(connection_handler, errno): 
             call when an error raised
-        + peer_id SHOULD NOT be used in anyway except to identify the connection
         
         2. Event Loop:
         reactor.run()
@@ -42,7 +41,7 @@ class Reactor:
         + address is a tuple of (addr, port)        
     """
     
-    def __init__(self, address):
+    def __init__(self, port = 0):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         self.connector = None
         self.disconnector = None
@@ -51,7 +50,7 @@ class Reactor:
         self.acceptor = None
         self.channels = []
         self.logger.debug("reactor.__init__()")
-        handler = ServerHandler(reactor = self, address = address)
+        handler = ServerHandler(reactor = self, port = port)
         self.add_channel(handler)
         return
     
@@ -99,14 +98,16 @@ class ServerHandler(asyncore.dispatcher):
     """
         This is the ServerHandler which is to handle incoming connections.        
     """
-    def __init__(self, reactor, address):       
+    def __init__(self, reactor, port):       
         self.reactor = reactor
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.bind(address)
+        # bind socket to a public ip (not localhost or 127.0.0.1
+        self.bind((socket.gethostname(), port))
+        # get socket address for future use
         self.address = self.socket.getsockname()
-        self.logger.debug('ServerHandler binding to %s', self.address)
+        self.logger.debug('ServerHandler binding to %s', self.socket.getsockname())
         self.listen(5)
         return
     

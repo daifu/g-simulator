@@ -66,7 +66,7 @@ class Servent:
         if ttl > 1:                
             if message.get_payload_descriptor() == GnutellaBodyId.PING:                     
                 # send Ping to any neighbor that not the one servent recceived the Ping from
-                self.forward_ping(connection_handler, message_id, ttl-1, hops+1)
+                self.forward(connection_handler, message)
                 # add ping message_id to seem list to forward pong later
                 self.ping_list[message_id] = connection_handler
                 # reply with Pong (the return trip's ttl should be equals to hops)
@@ -83,9 +83,17 @@ class Servent:
                 except KeyError:
                     pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERY:
-                # TODo
-                # servent behavior when receiving QUERY message
-                pass
+                # add to query_list mapping
+                self.query_list[message_id] = connection_handler
+                # forward query packet to neighbor servent
+                self.forward(connection_handler, message)
+                # use min speed to decide
+                min_speed = message.body.min_speed
+                criteria = message.body.search_criteria
+                # search for files
+                if not self.search(criteria) == []:
+                    # TODO: send QueryHit back
+                    pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
                 # TODO
                 # servent behavior when receiving QUERYHIT message
@@ -105,12 +113,12 @@ class Servent:
         # TODO: resource clean up i.e. ping_list, etc...
         return
     
-    def forward_ping(self, connection_handler, message_id, ttl, hops):
+    def forward(self, connection_handler, message):
         """
-        Forward Ping packet to every directly connected servent
+        Forward message to every directly connected servent
         """
-        message = Message(message_id, ttl, hops)
-        PingBody(message)
+        message.decrease_ttl()
+        message.increase_hop()
         self.reactor.broadcast_except_for(connection_handler, message)
         return
     

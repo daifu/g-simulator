@@ -54,16 +54,18 @@ class Servent:
         message_id = message.get_message_id()        
         # Routing only if time to live > 1
         if ttl > 1:                
-            if message.get_payload_descriptor() == GnutellaBodyId.PING:                     
-                # send Ping to any neighbor that not the one servent recceived the Ping from
-                self.forward(connection_handler, message)
-                # add ping message_id to seem list to forward pong later
-                self.ping_list[message_id] = connection_handler
-                # reply with Pong (the return trip's ttl should be equals to hops)
-                pong_message = Message(message_id, hops, 0)
-                # TODO: fixed number of files share and number of kilobyte shared              
-                PongBody(pong_message, self.reactor.ip, self.reactor.port, 2, 2)
-                connection_handler.send_message(pong_message)
+            if message.get_payload_descriptor() == GnutellaBodyId.PING:
+                # check if we saw this ping before. If not, then process
+                if message_id not in self.ping_list:                 
+                    # send Ping to any neighbor that not the one servent recceived the Ping from
+                    self.forward(connection_handler, message)
+                    # add ping message_id to seem list to forward pong later
+                    self.ping_list[message_id] = connection_handler
+                    # reply with Pong (the return trip's ttl should be equals to hops)
+                    pong_message = Message(message_id, hops, 0)
+                    # TODO: fixed number of files share and number of kilobyte shared              
+                    PongBody(pong_message, self.reactor.ip, self.reactor.port, 2, 2)
+                    connection_handler.send_message(pong_message)
             elif message.get_payload_descriptor() == GnutellaBodyId.PONG:
                 # Forward pong back on the same path                
                 try:

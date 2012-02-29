@@ -9,6 +9,12 @@ class FileInfo:
     file_id = 0
     file_name =  ""
     file_size = 0
+    indices = []
+    def __init__(self, file_id, file_name, file_size):
+        self.indices = file_name.split()
+        self.file_id = file_id
+        self.file_name = file_name
+        self.file_size = file_size
    
 class Servent:
     def __init__(self, port, files = []):
@@ -75,17 +81,19 @@ class Servent:
                 except KeyError:
                     pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERY:
-                # add to query_list mapping
-                self.query_list[message_id] = connection_handler
-                # forward query packet to neighbor servent
-                self.forward(connection_handler, message)
-                # use min speed to decide
-                min_speed = message.body.min_speed
-                criteria = message.body.search_criteria
-                # search for files
-                if not self.search(criteria) == []:
-                    # TODO: send QueryHit back
-                    pass
+                # check if we saw this query before. If not, then process
+                if message_id not in self.query_list:
+                    # add to query_list mapping
+                    self.query_list[message_id] = connection_handler
+                    # forward query packet to neighbor servent
+                    self.forward(connection_handler, message)
+                    # use min speed to decide
+                    min_speed = message.body.min_speed
+                    criteria = message.body.search_criteria
+                    # search for files
+                    if not self.search(criteria) == []:
+                        # TODO: send QueryHit back
+                        pass
             elif message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
                 # servent behavior when receiving QUERYHIT message
                 try:
@@ -138,6 +146,13 @@ class Servent:
         return False
 
     def search(self, criteria):
-        # search the files with criteria
-        # TODO: right now, return empty list                
-        return []    
+        """ 
+        return a list of file fit the criteria
+        """
+        tokens = criteria.split()
+        match = []
+        for t in tokens:
+            for fileinfo in self.files:
+                if t in fileinfo.indices:
+                    match.append(fileinfo)                       
+        return match

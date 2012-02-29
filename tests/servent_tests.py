@@ -1,13 +1,6 @@
 from nose.tools import *
 from pygnutella.servent import Servent, FileInfo
 
-class GnutellaBodyId:
-    PING = 0x00
-    PONG = 0x01
-    QUERY = 0x80
-    QUERYHIT = 0x81
-    PUSH = 0x40
-
 def setup_func():
     """docstring for test_servent"""
     global servent

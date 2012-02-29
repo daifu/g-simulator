@@ -8,6 +8,7 @@ from message import Message
 class FileInfo:
     file_id = 0
     file_name =  ""
+    # file_size assumed to be in unit of byte
     file_size = 0
     indices = []
     def __init__(self, file_id, file_name, file_size):
@@ -31,6 +32,11 @@ class Servent:
         self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)
         # create servent id
         self.id = uuid.uuid1().bytes
+        # calculate number of file and number of kilobyte shared
+        self.num_files = len(files)
+        self.num_kilobytes = 0
+        for f in files:
+            self.num_kilobytes += f.file_size
         return
     
     def on_accept(self):
@@ -70,7 +76,7 @@ class Servent:
                     # reply with Pong (the return trip's ttl should be equals to hops)
                     pong_message = Message(message_id, hops, 0)
                     # TODO: fixed number of files share and number of kilobyte shared              
-                    PongBody(pong_message, self.reactor.ip, self.reactor.port, 2, 2)
+                    PongBody(pong_message, self.reactor.ip, self.reactor.port, self.num_files, self.num_kilobytes)
                     connection_handler.send_message(pong_message)
             elif message.get_payload_descriptor() == GnutellaBodyId.PONG:
                 # Forward pong back on the same path                
@@ -138,6 +144,11 @@ class Servent:
     def set_files(self, files):
         # each member of files is a FileInfo 
         self.files = files
+        # calculate number of file and number of kilobyte shared
+        self.num_files = len(files)
+        self.num_kilobytes = 0
+        for f in files:
+            self.num_kilobytes += f.file_size        
         return
 
     def get_files(self, files):

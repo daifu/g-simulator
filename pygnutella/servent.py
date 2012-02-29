@@ -37,6 +37,7 @@ class Servent:
         self.num_kilobytes = 0
         for f in files:
             self.num_kilobytes += f.file_size
+        self.num_kilobytes /= 1000 # shrink the unit
         return
     
     def on_accept(self):
@@ -148,7 +149,8 @@ class Servent:
         self.num_files = len(files)
         self.num_kilobytes = 0
         for f in files:
-            self.num_kilobytes += f.file_size        
+            self.num_kilobytes += f.file_size
+        self.num_kilobytes /= 1000 # shrink the unit        
         return
 
     def get_files(self, files):

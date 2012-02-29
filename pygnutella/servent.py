@@ -75,8 +75,7 @@ class Servent:
                     # add ping message_id to seem list to forward pong later
                     self.ping_list[message_id] = connection_handler
                     # reply with Pong (the return trip's ttl should be equals to hops)
-                    pong_message = Message(message_id, hops, 0)
-                    # TODO: fixed number of files share and number of kilobyte shared              
+                    pong_message = Message(message_id, hops, 0)              
                     PongBody(pong_message, self.reactor.ip, self.reactor.port, self.num_files, self.num_kilobytes)
                     connection_handler.send_message(pong_message)
             elif message.get_payload_descriptor() == GnutellaBodyId.PONG:

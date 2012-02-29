@@ -114,7 +114,16 @@ class Servent:
         servent behavior when leaving the network 
         """
         self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
-        # TODO: resource clean up i.e. ping_list, etc...
+        # resource clean up
+        # clean up ping_list
+        remove = [k for k,v in self.ping_list.iteritems() if v == connection_handler]
+        for k in remove: del self.ping_list[k]
+        # clean up query list
+        remove = [k for k,v in self.query_list.iteritems() if v == connection_handler]
+        for k in remove: del self.query_list[k]
+        # clean up push list
+        remove = [k for k,v in self.push_list.iteritems() if v == connection_handler]
+        for k in remove: del self.push_list[k]        
         return
     
     def forward(self, connection_handler, message):
@@ -138,8 +147,6 @@ class Servent:
         """
         check if the servent have the file with id = file_id
         """
-        # iterate through the file list fo find the file
-        # files is array/dict, w/e of file_id
         for fileinfo in self.files:
             if fileinfo.file_id == file_id:
                 return True

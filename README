@@ -1,14 +1,16 @@
-Check require packages
-====================
+Check required packages
+=======================
 
 Go to the current direcotry(under g-simulator), and run:
 > python setup.py
 
 It will check all the required packages and install nose if your system does
-not have, and run all the tests.
+not have.
+
+Run all the tests.
 
 Coding Standard
-====================
+=======================
 
 + indentation is 4 spaces not 2 spaces (and also not a tab). Configure your
 editor to do so.
@@ -20,7 +22,7 @@ editor to do so.
 
 	import logging
     .....
-    # define variable      
+    # define variable
     self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
     .....
     # usage just like printf
@@ -31,7 +33,7 @@ name is too ambiguous
 + use # for comment
 
 How to run the test
-====================
+=======================
 
 1. Install nose using setuptools/distribute:
 

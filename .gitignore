@@ -1,1 +1,3 @@
 *.pyc
+build/
+nose.egg.info

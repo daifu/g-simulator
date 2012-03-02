@@ -1,7 +1,17 @@
+Check require packages
+====================
+
+Go to the current direcotry(under g-simulator), and run:
+> python setup.py
+
+It will check all the required packages and install nose if your system does
+not have, and run all the tests.
+
 Coding Standard
 ====================
 
-+ indentation is 4 spaces not 2 spaces (and also not a tab). Configure your editor to do so.
++ indentation is 4 spaces not 2 spaces (and also not a tab). Configure your
+editor to do so.
 + your class is in directory pygnutella (aka package pygnutella)
 + test script is in directory tests
 + class name: class name capitalise every word
@@ -16,7 +26,8 @@ Coding Standard
     # usage just like printf
     self.logger.debug('function() -> %s", variable)
      
-+ use doc string three quote """ """ for every class or function you feel the name is too ambiguous
++ use doc string three quote """ """ for every class or function you feel the
+name is too ambiguous
 + use # for comment
 
 How to run the test
@@ -28,14 +39,18 @@ How to run the test
 OR
 > pip install nose
 
-Or, if you don’t have setuptools/distribute installed, use the download link at right to download(http://pypi.python.org/pypi/nose/) the source package, and install it in the normal fashion: Ungzip and untar the source package, cd to the new directory, and:
+Or, if you don’t have setuptools/distribute installed, cd to the source
+package(nose-1.1.2), and:
 > python setup.py install
+OR
+> sudo python setup.py install
 
 2. Run the test:
 Go to the main directory, which is under g-simulator/
 > nosetests
 
-3. Naming convention for test files: please make sure all the file names are [class_name]_tests.py, or the test will fail.
+3. Naming convention for test files: please make sure all the file names are
+[class_name]_tests.py, or the test will fail.
 
 4. Import libraries for testing
 for example, we want to test message.py file:

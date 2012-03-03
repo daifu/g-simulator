@@ -164,7 +164,11 @@ class ConnectionHandler(asyncore.dispatcher):
         if not self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
             return
         self.logger.debug('send_message() -> %s', message.serialize())
-        self.data_to_write += message.serialize()
+        self.write(message.serialize())
+        return
+    
+    def write(self, data):
+        self.data_to_write += data
         return
             
     def writable(self):

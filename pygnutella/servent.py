@@ -19,22 +19,25 @@ class FileInfo:
    
 class Servent:
     def __init__(self, port=0, files = []):
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
-        self.files = files
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         # forwarding table: (message_id, payload_type) -> connection_handler
-        self.forwarding_table = {}
-        # create Reactor class for socket management
-        self.reactor = Reactor(port)
-        self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)
+        self.forwarding_table = {}        
         # create servent id
         self.id = uuid.uuid4().bytes
         # calculate number of file and number of kilobyte shared
+        self.files = files
         self.num_files = len(files)
         self.num_kilobytes = 0
         for f in files:
             self.num_kilobytes += f.file_size
         self.num_kilobytes /= 1000 # shrink the unit
+        # create Reactor class for socket management
+        self.reactor = Reactor(port)
+        self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)      
         return
+    
+    def run(self, timeout=30):
+        self.reactor.run(timeout)
     
     def on_accept(self):
         """

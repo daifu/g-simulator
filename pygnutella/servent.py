@@ -31,7 +31,7 @@ class Servent:
         self.reactor = Reactor(port)
         self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)
         # create servent id
-        self.id = uuid.uuid1().bytes
+        self.id = uuid.uuid4().bytes
         # calculate number of file and number of kilobyte shared
         self.num_files = len(files)
         self.num_kilobytes = 0

@@ -13,6 +13,6 @@ class IContext:
         self.handler = handler
         return
     
-    def on_read(self, data):
+    def on_read(self):
         raise NotImplementedError
         

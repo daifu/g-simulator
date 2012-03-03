@@ -2,8 +2,8 @@ import asyncore
 import logging
 import socket
 import utils
-from handshake import HandShake, HandShakeState
-from message import Message
+from handshake import HandShakeOutContext, HandShakeInContext
+from utils import print_hex
 
 class Reactor:
     """
@@ -49,7 +49,6 @@ class Reactor:
         self.receiver = None
         self.acceptor = None
         self.channels = []
-        self.logger.debug("reactor.__init__()")
         handler = ServerHandler(reactor = self, port = port)
         self.add_channel(handler)
         return
@@ -146,24 +145,21 @@ class ConnectionHandler(asyncore.dispatcher):
         self.reactor = reactor
         self.chunk_size = chunk_size                                 
         if address:
-            self.handshake_state = HandShakeState.SENDING_WELCOME
-            self.data_to_write = HandShake.WELCOME_MESSAGE   
+            self.context = HandShakeOutContext(self)              
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.logger.debug('connecting to %s', address)
             self.connect(address)
         elif sock:
-            self.handshake_state = HandShakeState.RECEIVING_WELCOME            
+            self.context = HandShakeInContext(self)            
             asyncore.dispatcher.__init__(self, sock=sock)
         else:
             raise ValueError                                        
         return
     
     def send_message(self, message):
-        # Block all message until
-        if not self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
-            return
-        self.logger.debug('send_message() -> %s', message.serialize())
+        self.logger.debug('send_message()')
+        print_hex(message.serialize())
         self.write(message.serialize())
         return
     
@@ -171,65 +167,32 @@ class ConnectionHandler(asyncore.dispatcher):
         self.data_to_write += data
         return
             
-    def writable(self):
+    def writable(self):        
         response = bool(self.data_to_write)
-        self.logger.debug('writable() -> %s', response)
         return response
     
-    def handle_connect(self):        
-        self.logger.debug('handle_connect()')
+    def handle_connect(self):
         return
     
     def handle_close(self):
         self.logger.debug('handle_close()')        
         self.close()
-        if self.handshake_state == HandShakeState.COMPLETED_AND_SUCCEEDED:
-            self.reactor.disconnector(self)
-            self.reactor.remove_channel(self)        
+        self.reactor.disconnector(self)
+        self.reactor.remove_channel(self)        
         return
     
-    def handle_read(self):        
-        self.logger.debug('handle_read()')
+    def handle_read(self):
         self.received_data += self.recv(self.chunk_size)
-        if self.handshake_state == HandShakeState.RECEIVING_WELCOME and self.received_data[:len(HandShake.WELCOME_MESSAGE)]:
-            if self.reactor.acceptor():
-                self.received_data = self.received_data[len(HandShake.WELCOME_MESSAGE):]
-                self.handshake_state = HandShakeState.SENDING_RESPONSE
-                self.data_to_write = HandShake.RESPONSE_MESSAGE
-            else:
-                self.handle_close()
-        elif self.handshake_state == HandShakeState.RECEIVING_RESPONSE and self.received_data[:len(HandShake.RESPONSE_MESSAGE)]:
-            self.handshake_state = HandShakeState.COMPLETED_AND_SUCCEEDED
-            self.received_data = self.received_data[len(HandShake.RESPONSE_MESSAGE):]
-            self.reactor.add_channel(self)
-            self.reactor.connector(self)            
-        else:
-            try:
-                msg = Message()
-                msg_length = msg.deserialize(self.received_data)
-                if msg_length:
-                    self.reactor.receiver(self, msg)
-                    self.received_data = self.received_data[msg_length:]               
-            except ValueError:
-                # The message stream is messed up
-                self.logger.debug("handle_read() -> mesage stream is messed up")
-                self.handle_close()
+        self.context = self.context.on_read()
         return
     
     def handle_write(self):
         """
             Write as much as possible
         """        
-        sent = self.send(self.data_to_write)
-        self.logger.debug('handle_write() -> (%d) %s', sent, self.data_to_write[:sent])
+        self.logger.debug('handle_write()')
+        sent = self.send(self.data_to_write)        
         self.data_to_write = self.data_to_write[sent:]
-        # Maintain Handshake state machine
-        if self.handshake_state == HandShakeState.SENDING_WELCOME and self.data_to_write == '':
-            self.handshake_state = HandShakeState.RECEIVING_RESPONSE
-        if self.handshake_state == HandShakeState.SENDING_RESPONSE and self.data_to_write == '':
-            self.handshake_state = HandShakeState.COMPLETED_AND_SUCCEEDED
-            self.reactor.add_channel(self)
-            self.reactor.connector(self)   
         return
     
 class DownloadHandler(asyncore.dispatcher):

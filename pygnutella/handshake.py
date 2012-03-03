@@ -30,7 +30,7 @@ class HandShakeCompleteContext(IContext):
             # The message stream is messed up
             self.logger.debug("handle_read() -> mesage stream is messed up")
             self.handler.handle_close()
-        return
+        return self
 
 class HandShakeSendingResponse(IContext):
     def __init__(self, handler):
@@ -44,6 +44,7 @@ class HandShakeSendingResponse(IContext):
                 self.handler.write(HandShake.RESPONSE_MESSAGE)
                 self.handler.received_data = self.handler.received_data[size:]
                 return HandShakeCompleteContext(self, self.handler)
+        return self
 
 class HandShakeSendingWelcome(IContext):
     def __init__(self, handler):
@@ -56,6 +57,5 @@ class HandShakeSendingWelcome(IContext):
         if len(self.handler.received_data) > size:
             if HandShake.RESPONSE_MESSAGE == self.handler.received_data[:size]:
                 self.handler.received_data = self.handler.received_data[size:]
-                return HandShakeCompleteContext(self, self.handler)        
-
-class HandShakeContext(IContext):
+                return HandShakeCompleteContext(self, self.handler)            
+        return self

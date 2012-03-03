@@ -169,6 +169,7 @@ class ConnectionHandler(asyncore.dispatcher):
             
     def writable(self):        
         response = bool(self.data_to_write)
+        self.logger.debug('writable() -> %s', response)
         return response
         
     def handle_close(self):

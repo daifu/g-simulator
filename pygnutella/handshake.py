@@ -32,7 +32,7 @@ class HandShakeCompleteContext(IContext):
             self.handler.handle_close()
         return self
 
-class HandShakeSendingResponse(IContext):
+class HandShakeSendingResponseContext(IContext):
     def __init__(self, handler):
         IContext.__init__(self, handler)
         return
@@ -46,7 +46,7 @@ class HandShakeSendingResponse(IContext):
                 return HandShakeCompleteContext(self, self.handler)
         return self
 
-class HandShakeSendingWelcome(IContext):
+class HandShakeSendingWelcomeContext(IContext):
     def __init__(self, handler):
         IContext.__init__(self, handler)
         self.handler.write(HandShake.WELCOME_MESSAGE)

@@ -1,4 +1,4 @@
-from pygnutella.reactor import Reactor
+from pygnutella.servent import Servent
 from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
 from pygnutella.utils import print_hex
@@ -23,8 +23,7 @@ def receiver(connection_handler, message):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')                        
-    reactor = Reactor()
-    reactor.install_handlers(acceptor, connector, receiver, disconnector)
+    servent = Servent()
     if len(sys.argv) > 2:
-        reactor.make_outgoing_connection((sys.argv[1], int(sys.argv[2])))
-    reactor.run()
+        servent.reactor.make_outgoing_connection((sys.argv[1], int(sys.argv[2])))
+    servent.run()

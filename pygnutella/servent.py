@@ -18,7 +18,7 @@ class FileInfo:
         self.file_size = file_size
    
 class Servent:
-    def __init__(self, port, files = []):
+    def __init__(self, port=0, files = []):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.files = files
         # forwarding table: (message_id, payload_type) -> connection_handler

@@ -232,3 +232,6 @@ class ConnectionHandler(asyncore.dispatcher):
             self.reactor.connector(self)   
         return
     
+class DownloadHandler(asyncore.dispatcher):
+    def __init__(self):
+        pass

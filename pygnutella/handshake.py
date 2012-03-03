@@ -1,13 +1,6 @@
 from context import IContext
 from message import Message
-
-class HandShakeState:
-    SENDING_WELCOME = 0
-    RECEIVING_RESPONSE = 1     
-    RECEIVING_WELCOME = 2
-    SENDING_RESPONSE = 3       
-    COMPLETED_AND_SUCCEEDED = 4
-        
+       
 class HandShake:
     WELCOME_MESSAGE = 'GNUTELLA CONNECT/0.4\n\n'
     RESPONSE_MESSAGE = 'GNUTELLA OK\n\n'

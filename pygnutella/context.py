@@ -1,3 +1,5 @@
+import logging
+
 class IContext:
     """
     IContext is a way to implement state in asynchronous network program
@@ -10,6 +12,7 @@ class IContext:
     The current state (i.e. self variable) or new state. 
     """
     def __init__(self, handler):
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.handler = handler
         return
     

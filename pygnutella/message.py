@@ -1,4 +1,4 @@
-import logging
+import logging, uuid
 from struct import unpack, pack, calcsize
 from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
 
@@ -8,7 +8,11 @@ class Message:
     
     def __init__(self, message_id = None, ttl = 7, hops = 0):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
-        self.message_id = message_id
+        if message_id:
+            self.message_id = message_id
+        else:
+            # automatically generate one
+            self.message_id = uuid.uuid4().bytes
         self.ttl = ttl
         self.hops = hops
         self.body = None
@@ -40,7 +44,7 @@ class Message:
 
     def get_message_id(self):
         return self.message_id
-
+    
     def get_ttl(self):
         return self.ttl
     

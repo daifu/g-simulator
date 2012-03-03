@@ -13,10 +13,11 @@ class HandShake:
     RESPONSE_MESSAGE = 'GNUTELLA OK\n\n'
 
 class HandShakeCompleteContext(IContext):
-    def __init__(self, handler, received_data):
-        IContext.__init__(self, handler, received_data)
-        handler.reactor.connector(handler)
-        handler.reactor.add_channel(handler)        
+    def __init__(self, handler):
+        IContext.__init__(self, handler)
+        self.handler.reactor.connector(handler)
+        self.handler.reactor.add_channel(handler)
+        self.on_read()       
         return
     
     def on_read(self):
@@ -24,38 +25,52 @@ class HandShakeCompleteContext(IContext):
             msg = Message()
             msg_length = msg.deserialize(self.handler.received_data)
             if msg_length:
-                self.handler.reactor.receiver(self, msg)
-                self.handler.received_data = self.received_data[msg_length:]               
+                self.handler.reactor.receiver(self.handler, msg)
+                self.handler.received_data = self.handler.received_data[msg_length:]
+            else:
+                self.logger.debug("on_read() -> incomplete message")
         except ValueError:
             # The message stream is messed up
-            self.logger.debug("handle_read() -> mesage stream is messed up")
+            self.logger.debug("on_read() -> mesage stream is messed up")
             self.handler.handle_close()
         return self
 
-class HandShakeSendingResponseContext(IContext):
+class HandShakeInContext(IContext):
     def __init__(self, handler):
         IContext.__init__(self, handler)
+        self.on_read()
         return
     
     def on_read(self):
+        self.logger.debug("on_read()")
         size = len(HandShake.WELCOME_MESSAGE)
-        if len(self.handler.received_data) > size:
+        if len(self.handler.received_data) >= size:
             if HandShake.WELCOME_MESSAGE == self.handler.received_data[:size]:
-                self.handler.write(HandShake.RESPONSE_MESSAGE)
-                self.handler.received_data = self.handler.received_data[size:]
-                return HandShakeCompleteContext(self, self.handler)
+                self.logger.debug("on_read() got Welcome Message")
+                if self.handler.reactor.acceptor():
+                    self.handler.write(HandShake.RESPONSE_MESSAGE)
+                    self.handler.received_data = self.handler.received_data[size:]
+                    self.logger.debug("transit to HandShakeCompleteContext")
+                    return HandShakeCompleteContext(self.handler)
+                else:
+                    self.handler.handle_close()
         return self
 
-class HandShakeSendingWelcomeContext(IContext):
+class HandShakeOutContext(IContext):
     def __init__(self, handler):
         IContext.__init__(self, handler)
         self.handler.write(HandShake.WELCOME_MESSAGE)
+        self.logger.debug("sending Welcome Message")
+        self.on_read()
         return
     
     def on_read(self):
+        self.logger.debug("on_read()")
         size = len(HandShake.RESPONSE_MESSAGE)
-        if len(self.handler.received_data) > size:
+        if len(self.handler.received_data) >= size:
             if HandShake.RESPONSE_MESSAGE == self.handler.received_data[:size]:
+                self.logger.debug("on_read() got Response Message")
                 self.handler.received_data = self.handler.received_data[size:]
-                return HandShakeCompleteContext(self, self.handler)            
+                self.logger.debug("transit to HandShakeCompleteContext")
+                return HandShakeCompleteContext(self.handler)            
         return self

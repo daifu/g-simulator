@@ -21,11 +21,11 @@ class Servent:
     def __init__(self, port, files = []):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.files = files
-        # push_list: message_id of ping message -> connection_handlers
+        # ping_list: message_id of ping message -> connection_handlers
         self.ping_list = {}
-        # push_list: message_id of query message -> connection_handlers
+        # query_list: message_id of query message -> connection_handlers
         self.query_list = {}
-        # push_list: message_id of push message -> connection_handlers  
+        # push_list: message_id of queryhit message -> connection_handlers  
         self.push_list = {}
         # create Reactor class for socket management
         self.reactor = Reactor(port)
@@ -71,7 +71,7 @@ class Servent:
                 # check if we saw this ping before. If not, then process
                 if message_id not in self.ping_list:                 
                     # send Ping to any neighbor that not the one servent recceived the Ping from
-                    self.forward(connection_handler, message)
+                    self.flood(connection_handler, message)
                     # add ping message_id to seem list to forward pong later
                     self.ping_list[message_id] = connection_handler
                     # reply with Pong (the return trip's ttl should be equals to hops)
@@ -92,7 +92,7 @@ class Servent:
                     # add to query_list mapping
                     self.query_list[message_id] = connection_handler
                     # forward query packet to neighbor servent
-                    self.forward(connection_handler, message)
+                    self.flood(connection_handler, message)
                     # use min speed to decide
                     min_speed = message.body.min_speed
                     criteria = message.body.search_criteria
@@ -106,12 +106,18 @@ class Servent:
                     message.decrease_ttl()
                     message.increase_hop()
                     self.query_list[message_id].send_message(message)
+                    # save in table for routing push message later
+                    self.push_list[message_id] = connection_handler
                 except KeyError:
                     pass
             elif message.get_payload_descriptor() == GnutellaBodyId.PUSH:
-                # TODO
-                # servent behavior when receiving PUSH message
-                pass
+                if message.body.servent_id == self.id:
+                    pass
+                else:
+                    # forward
+                    message.decrease_ttl()
+                    message.increase_hop()
+                    self.push_list[message_id].send_message(message)
             else:
                 raise ValueError
             
@@ -132,7 +138,7 @@ class Servent:
         for k in remove: del self.push_list[k]        
         return
     
-    def forward(self, connection_handler, message):
+    def flood(self, connection_handler, message):
         """
         Forward message to every directly connected servent
         """

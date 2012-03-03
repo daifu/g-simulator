@@ -99,15 +99,10 @@ class Servent:
         """
         self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
         # resource clean up
-        # clean up ping_list
-        remove = [k for k,v in self.ping_list.iteritems() if v == connection_handler]
-        for k in remove: del self.ping_list[k]
-        # clean up query list
-        remove = [k for k,v in self.query_list.iteritems() if v == connection_handler]
-        for k in remove: del self.query_list[k]
-        # clean up push list
-        remove = [k for k,v in self.push_list.iteritems() if v == connection_handler]
-        for k in remove: del self.push_list[k]        
+        # clean up forwarding table
+        remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]
+        for k in remove: 
+            del self.forwarding_table[k]
         return
     
     def forward(self, message):

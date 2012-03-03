@@ -1,6 +1,7 @@
 from pygnutella.reactor import Reactor
 from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
+from pygnutella.utils import print_hex
 import logging
 import sys
 
@@ -17,8 +18,7 @@ def disconnector(connection_handler):
     print "disconnected"
 
 def receiver(connection_handler, message):
-    print "receiving message = ", repr(message.serialize())
-    print "message len = ", len(message.serialize())
+    print_hex(message.serialize())
     return
 
 if __name__ == '__main__':

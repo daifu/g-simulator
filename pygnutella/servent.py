@@ -1,5 +1,4 @@
-import logging
-import uuid
+import logging, random, uuid
 from reactor import Reactor
 from messagebody import GnutellaBodyId, PongBody
 from message import Message
@@ -167,3 +166,19 @@ class Servent:
                 if t in fileinfo.indices:
                     match.append(fileinfo)                       
         return match
+    
+    
+class RandomWalkServent(Servent):
+    """
+    This servent when flood, send with probability 0.5
+    """
+    def flood(self, connection_handler, message):
+        if message.get_ttl() < 2:
+            return
+        message.decrease_ttl()
+        message.increase_hop()
+        for handler in self.reactor.channels:
+            if not handler == connection_handler:
+                if random.randint(0, 10) & 1:
+                    handler.send_message(message)
+        

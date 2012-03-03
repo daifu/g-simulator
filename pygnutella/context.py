@@ -11,9 +11,9 @@ class IContext:
     on_read is called when an input (i.e data) comes in. on_read return a state.
     The current state (i.e. self variable) or new state. 
     """
-    def __init__(self, writer, buffer=''):
+    def __init__(self, writer, received_data=''):
         assert callable(writer)
-        self.buffer = buffer
+        self.received_data = received_data
         self.writer = writer
         return
     

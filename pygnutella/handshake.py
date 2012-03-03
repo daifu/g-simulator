@@ -21,6 +21,7 @@ class HandShakeCompleteContext(IContext):
         return
     
     def on_read(self):
+        self.logger.debug("on_read()")
         try:
             msg = Message()
             msg_length = msg.deserialize(self.handler.received_data)

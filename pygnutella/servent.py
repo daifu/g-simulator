@@ -1,7 +1,7 @@
 import logging
 import uuid
 from reactor import Reactor
-from messagebody import GnutellaBodyId, PingBody, PongBody, PushBody, QueryBody, QueryHitBody
+from messagebody import GnutellaBodyId, PongBody
 from message import Message
 
 # struct of file, each servent have an array/list of these files
@@ -48,8 +48,6 @@ class Servent:
         """ 
         on event of a servent connects to 
         """
-        # Create and send a ping message
-        self.create_message(connection_handler, GnutellaBodyId.PING)
         return
 
     def on_receive(self, connection_handler, message):

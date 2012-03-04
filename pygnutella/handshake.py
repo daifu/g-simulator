@@ -202,8 +202,9 @@ class DownloadInContext(IContext):
                     self.handler.write(response)
                     self.logger.debug("file found and send response")
                     self.logger.debug(response)
-                    self.logger.debug("send content")
                     self.handler.write(self.file_content)
+                    self.handler.close_after_last_write = True
+                    self.logger.debug("send content")
                     self.logger.debug(self.file_content)
                 else:
                     bad_response = "HTTP 404 Not Found\r\n\r\n"

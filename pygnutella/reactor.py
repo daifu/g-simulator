@@ -196,7 +196,3 @@ class ConnectionHandler(asyncore.dispatcher):
         sent = self.send(self.data_to_write)        
         self.data_to_write = self.data_to_write[sent:]
         return
-    
-class DownloadHandler(asyncore.dispatcher):
-    def __init__(self):
-        pass

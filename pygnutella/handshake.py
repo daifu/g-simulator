@@ -57,8 +57,8 @@ class HandShakeInContext(IContext):
         return
 
 class HandShakeOutContext(IContext):
-    def __init__(self, handler):
-        IContext.__init__(self, handler, data=None)
+    def __init__(self, handler, data=None):
+        IContext.__init__(self, handler, data)
         self.handler.write(HandShake.WELCOME_MESSAGE)
         self.logger.debug("sending Welcome Message")
         self.on_read()

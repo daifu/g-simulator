@@ -25,5 +25,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')                        
     servent = Servent()
     if len(sys.argv) > 2:
-        servent.reactor.make_outgoing_connection((sys.argv[1], int(sys.argv[2])))
+        servent.reactor.gnutella_connect((sys.argv[1], int(sys.argv[2])))
     servent.run()

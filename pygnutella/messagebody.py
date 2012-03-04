@@ -15,7 +15,7 @@ class IMessageBody:
     def __init__(self, message):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.message = message
-        self.message.set_body(self)
+        self.message.body = self
         return
 
     def serialize(self):
@@ -36,7 +36,7 @@ class PingBody(IMessageBody):
     """
     def __init__(self, message):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.PING)
+        self.message.payload_descriptor = GnutellaBodyId.PING
         return
 
     def serialize(self):
@@ -52,7 +52,7 @@ class PongBody(IMessageBody):
     """
     def __init__(self, message, ip = None, port = None, num_of_files = None, num_of_kb = None):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.PONG)
+        self.message.payload_descriptor =  GnutellaBodyId.PONG
         self.ip = ip
         self.port = port
         self.num_of_files = num_of_files
@@ -64,7 +64,11 @@ class PongBody(IMessageBody):
         self.__length = 2+4+4+4
         return
 
-    def serialize(self):        
+    def serialize(self):
+        assert self.ip != None
+        assert self.port != None
+        assert self.num_of_files != None
+        assert self.num_of_kb != None     
         body = pack('!H', self.port) + pack('<L', self.ip) + pack('!II', self.num_of_files, self.num_of_kb)
         return body
 
@@ -82,7 +86,7 @@ class PushBody(IMessageBody):
     """
     def __init__(self, message, servent_id = None, ip = None, port = None, file_index = None):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.PUSH)
+        self.message.payload_descriptor = GnutellaBodyId.PUSH
         self.servent_id = servent_id
         self.ip = ip
         self.port = port
@@ -91,6 +95,10 @@ class PushBody(IMessageBody):
         return
 
     def serialize(self):
+        assert self.servent_id != None
+        assert self.file_index != None
+        assert self.ip != None
+        assert self.port != None
         body = pack(self.fmt, self.servent_id, self.file_index, self.ip, self.port)
         return body
 
@@ -108,7 +116,7 @@ class QueryBody(IMessageBody):
     """
     def __init__(self, message, min_speed = None, search_criteria = None):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.QUERY)
+        self.message.payload_descriptor = GnutellaBodyId.QUERY
         self.min_speed = min_speed
         self.search_criteria = search_criteria
         # The parameter could set to None, because it meants to deseralize a raw_data packet
@@ -116,6 +124,8 @@ class QueryBody(IMessageBody):
         return
 
     def serialize(self):
+        assert self.min_speed != None
+        assert self.search_criteria != None
         self.fmt = "!B%ss" % (len(self.search_criteria) + 1)        
         body = pack(self.fmt, self.min_speed, self.search_criteria)
         return body
@@ -138,7 +148,7 @@ class QueryHitBody(IMessageBody):
     """
     def __init__(self, message, num_of_hits = None, ip = None, port = None, speed = None, result_set = None, servent_id = None):
         IMessageBody.__init__(self, message)
-        self.message.set_payload_descriptor(GnutellaBodyId.QUERYHIT)
+        self.message.payload_descriptor = GnutellaBodyId.QUERYHIT
         self.ip = ip
         self.port = port
         self.speed = speed
@@ -148,6 +158,12 @@ class QueryHitBody(IMessageBody):
         return
 
     def serialize(self):
+        assert self.num_of_hits != None
+        assert self.ip != None
+        assert self.port != None
+        assert self.speed != None
+        assert self.result_set != None
+        assert self.servent_id != None
         body = pack("!BHLI", self.num_of_hits, self.port, self.ip, self.speed)
         for result in self.result_set:
             fmt = "!iI%ss" % (len(result['file_name'])+2)                        

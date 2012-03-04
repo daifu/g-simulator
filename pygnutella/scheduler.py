@@ -146,6 +146,8 @@ def _scheduler():
             raise
         except:
             print traceback.format_exc()
+        # update to recent time take into the time of processing the call
+        now = time.time()
 
 def close_all(socket_map=None, ignore_all=False):
     """Close all scheduled functions and opened sockets."""
@@ -195,14 +197,14 @@ def loop(timeout=30, use_poll=False, socket_map=None, count=None):
         while (socket_map or _tasks):
             _scheduler()
             if _tasks:
-                poll_fun(_tasks[0].timeout, socket_map)
+                poll_fun(_tasks[0].timeout -time.time(), socket_map)
             else:
                 poll_fun(timeout, socket_map)            
     else:
         while (socket_map or _tasks) and count > 0:
             _scheduler()
             if _tasks:
-                poll_fun(_tasks[0].timeout, socket_map)
+                poll_fun(_tasks[0].timeout - time.time(), socket_map)
             else:
                 poll_fun(timeout, socket_map)
             count -= 1

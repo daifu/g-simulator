@@ -2,7 +2,7 @@ import asyncore
 import logging
 import socket
 import utils
-from handshake import HandShakeOutContext, HandShakeInContext
+from handshake import HandShakeOutContext, DownloadOutContext, ProbeContext
 
 class Reactor:
     """
@@ -81,10 +81,18 @@ class Reactor:
         self.disconnector = disconnector
         return
     
-    def make_outgoing_connection(self, address):
-        self.logger.debug("make_outgoing_connection() -> %s", address)
+    def gnutella_connect(self, address):
+        self.logger.debug("gnutella_connect() -> %s", address)
         try:
-            ConnectionHandler(reactor = self, address = address)
+            ConnectionHandler(reactor = self, context_class = HandShakeOutContext, address = address)
+        except:
+            return False 
+        return True
+    
+    def download_connect(self, address):
+        self.logger.debug("gnutella_connect() -> %s", address)
+        try:
+            ConnectionHandler(reactor = self, context_class = DownloadOutContext, address = address)
         except:
             return False 
         return True
@@ -120,7 +128,7 @@ class ServerHandler(asyncore.dispatcher):
     def handle_accept(self):
         sock, address = self.accept()
         self.logger.debug('handle_accept() -> %s', address)
-        ConnectionHandler(reactor = self.reactor, sock=sock)
+        ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
         return
     
     def handle_close(self):
@@ -141,23 +149,22 @@ class ConnectionHandler(asyncore.dispatcher):
         sock.setblocking(0)
         handler.set_socket(sock = sock)
     """    
-    def __init__(self, reactor, address = None, sock = None, chunk_size=512):        
+    def __init__(self, reactor, context_class, context_data = None, address = None, sock = None, chunk_size=512):        
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.data_to_write = ''
         self.received_data = ''
         self.reactor = reactor
         self.chunk_size = chunk_size                                 
-        if address:
-            self.context = HandShakeOutContext(self)              
+        if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.logger.debug('connecting to %s', address)
             self.connect(address)
-        elif sock:
-            self.context = HandShakeInContext(self)            
+        elif sock:            
             asyncore.dispatcher.__init__(self, sock=sock)
         else:
-            raise ValueError                                        
+            raise ValueError
+        self.context = context_class(self, context_data)                                     
         return
         
     def write(self, data):
@@ -177,7 +184,7 @@ class ConnectionHandler(asyncore.dispatcher):
     
     def handle_read(self):
         self.received_data += self.recv(self.chunk_size)
-        self.context = self.context.on_read()
+        self.context.on_read()
         return
     
     def handle_write(self):

@@ -135,7 +135,8 @@ class ConnectionHandler(asyncore.dispatcher):
         self.data_to_write = ''
         self.received_data = ''
         self.reactor = reactor
-        self.chunk_size = chunk_size                                 
+        self.chunk_size = chunk_size
+        self.close_after_last_write = False                               
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -155,6 +156,9 @@ class ConnectionHandler(asyncore.dispatcher):
     def writable(self):        
         response = bool(self.data_to_write)
         self.logger.debug('writable() -> %s', response)
+        # check flag: close_after_last_write
+        if self.close_after_last_write and not response:
+            self.handle_close()
         return response
         
     def handle_close(self):

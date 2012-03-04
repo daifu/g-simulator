@@ -24,7 +24,7 @@ class Servent:
         # create servent id
         self.id = uuid.uuid4().bytes
         # calculate number of file and number of kilobyte shared
-        self.files = files
+        self._files = files
         self.num_files = len(files)
         self.num_kilobytes = 0
         for f in files:
@@ -133,7 +133,7 @@ class Servent:
            
     def set_files(self, files):
         # each member of files is a FileInfo 
-        self.files = files
+        self._files = files
         # calculate number of file and number of kilobyte shared
         self.num_files = len(files)
         self.num_kilobytes = 0
@@ -142,8 +142,11 @@ class Servent:
         self.num_kilobytes /= 1000 # shrink the unit        
         return
 
-    def get_files(self, files):
-        return files
+    def get_files(self):
+        return self._files
+
+    files = property(get_files, set_files)
+    
 
     def check_file(self, file_id):
         """
@@ -153,6 +156,12 @@ class Servent:
             if fileinfo.file_id == file_id:
                 return True
         return False
+
+    def get_file_content(self, file_id, file_name):
+        if not self.check_file(file_id):
+            return None
+        # return dummy content
+        return "This is (%s, %s)" % (file_name, file_id)
 
     def search(self, criteria):
         """ 

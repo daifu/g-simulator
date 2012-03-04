@@ -1,6 +1,9 @@
 from context import IContext
 from message import Message
-       
+import re
+
+HTTP_PATH_VALIDATOR = re.compile('^/get/([0-9]+)/([A-Za-z0-9\\.]+)$') 
+
 class HandShake:
     WELCOME_MESSAGE = 'GNUTELLA CONNECT/0.4\n\n'
     RESPONSE_MESSAGE = 'GNUTELLA OK\n\n'
@@ -103,6 +106,7 @@ class DownloadEventId:
     DOWNLOAD_INCOMPLETE = 2
     DOWNLOAD_COMPLETE = 3
     SEARCH_FILE = 4
+    BAD_REQUEST = 5
     
 class DownloadOutContext(IContext):
     def __init__(self, handler, data):
@@ -176,7 +180,7 @@ class DownloadInContext(IContext):
     def __init__(self, handler, data=None):
         IContext.__init__(self, handler)
         self.received_request = False
-        self.on_read()                        
+        self.on_read()                       
         return
     
     def on_read(self):
@@ -187,6 +191,12 @@ class DownloadInContext(IContext):
             self.logger.debug(self.handler.received_data[:first_index])
             header = self.handler.received_data[:first_index].split('\r\n')
             self.handler.received_data = self.handler.received_data[first_index+4:]
-    
+            method, path, version = header[0].split()
+            if method == "GET" and version == "HTTP/1.0" and HTTP_PATH_VALIDATOR.match(path) is not None:
+                self.file_id, self.file_name = HTTP_PATH_VALIDATOR.split(path)[1:3]
+                # Ask servent to get file content for file_id and file_name
+            else:
+                self.handler.reactor.servent.on_download(DownloadEventId.BAD_REQUEST, self.handler)
+                
     def on_close(self):
         return

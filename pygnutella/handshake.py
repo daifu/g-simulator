@@ -102,6 +102,7 @@ class DownloadEventId:
     BAD_FILE_PATH = 2
     DOWNLOAD_INCOMPLETE = 2
     DOWNLOAD_COMPLETE = 3
+    SEARCH_FILE = 4
     
 class DownloadOutContext(IContext):
     def __init__(self, handler, data):
@@ -173,5 +174,19 @@ class DownloadOutContext(IContext):
     
 class DownloadInContext(IContext):
     def __init__(self, handler, data=None):
-        IContext.__init__(self, handler, data)        
+        IContext.__init__(self, handler)
+        self.received_request = False
+        self.on_read()                        
+        return
+    
+    def on_read(self):
+        if not self.received_request and self.handler.received_data.count('\r\n\r\n') > 0:
+            self.received_request = True
+            first_index = self.handler.received_data.index('\r\n\r\n')
+            self.logger.debug("received request")
+            self.logger.debug(self.handler.received_data[:first_index])
+            header = self.handler.received_data[:first_index].split('\r\n')
+            self.handler.received_data = self.handler.received_data[first_index+4:]
+    
+    def on_close(self):
         return

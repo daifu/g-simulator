@@ -54,9 +54,10 @@ class Reactor:
         
     def broadcast_except_for(self, handler, message):
         self.logger.debug("broadcast_except_for() -> %s", message.serialize())
+        packet = message.serialize()
         for connection_handler in self.channels:
             if not connection_handler == handler:
-                connection_handler.send_message(message)
+                connection_handler.write(packet)
         return
     
     def add_channel(self, handler):     
@@ -89,10 +90,13 @@ class Reactor:
             return False 
         return True
     
-    def download_connect(self, address, file_index, file_name):
+    def download_connect(self, address, remote_file_index, remote_file_name, local_file_name):
         self.logger.debug("gnutella_connect() -> %s", address)
         try:
-            ConnectionHandler(reactor = self, context_class = DownloadOutContext, context_data = (file_index, file_name), address = address)
+            ConnectionHandler(reactor = self, 
+                              context_class = DownloadOutContext, 
+                              context_data = (remote_file_index, remote_file_name, local_file_name), 
+                              address = address)
         except:
             return False 
         return True

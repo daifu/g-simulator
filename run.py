@@ -2,7 +2,8 @@ from pygnutella.servent import Servent
 from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
 from pygnutella.utils import print_hex
-import logging, asyncore, sys
+import pygnutella.scheduler
+import logging, sys
 
 
 def connector(connection_handler):
@@ -26,4 +27,4 @@ if __name__ == '__main__':
     servent = Servent()
     if len(sys.argv) > 2:
         servent.reactor.gnutella_connect((sys.argv[1], int(sys.argv[2])))
-    asyncore.loop()
+    pygnutella.scheduler.loop()

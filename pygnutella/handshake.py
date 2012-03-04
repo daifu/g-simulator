@@ -8,8 +8,8 @@ class HandShake:
 class HandShakeCompleteContext(IContext):
     def __init__(self, handler, data=None):
         IContext.__init__(self, handler, data)
-        self.handler.reactor.connector(handler)
         self.handler.reactor.add_channel(handler)
+        self.handler.reactor.servent.on_connect(handler)        
         self.on_read()       
         return
     
@@ -19,8 +19,8 @@ class HandShakeCompleteContext(IContext):
             msg = Message()
             msg_length = msg.deserialize(self.handler.received_data)
             if msg_length:
-                self.handler.reactor.receiver(self.handler, msg)
                 self.handler.received_data = self.handler.received_data[msg_length:]
+                self.handler.reactor.servent.on_receive(self.handler, msg)                
             else:
                 self.logger.debug("on_read() -> incomplete message")
         except ValueError:
@@ -30,7 +30,7 @@ class HandShakeCompleteContext(IContext):
             
     def on_close(self):
         # Clean up (i.e. opposite of what we did in __init__)
-        self.handler.reactor.disconnector(self.handler)
+        self.handler.reactor.servent.on_disconnect(self.handler)
         self.handler.reactor.remove_channel(self.handler)
 
 class HandShakeInContext(IContext):
@@ -45,7 +45,7 @@ class HandShakeInContext(IContext):
         if len(self.handler.received_data) >= size:
             if HandShake.WELCOME_MESSAGE == self.handler.received_data[:size]:
                 self.logger.debug("on_read() got Welcome Message")
-                if self.handler.reactor.acceptor():
+                if self.handler.reactor.servent.on_accept():
                     self.handler.write(HandShake.RESPONSE_MESSAGE)
                     self.handler.received_data = self.handler.received_data[size:]
                     self.logger.debug("transit to HandShakeCompleteContext")
@@ -113,7 +113,7 @@ class DownloadOutContext(IContext):
         try:
             self.out_file = open(self.local_file_name, 'w')
         except IOError:
-            self.handle.reactor.downloader(DownloadEventId.BAD_FILE_PATH, self.handler)
+            self.handle.reactor.servent.on_download(DownloadEventId.BAD_FILE_PATH, self.handler)
             self.handler.handle_close()
             return        
         request = "GET /get/%s/%s/ HTTP/1.0\r\nConnection: Keep-Alive\r\nRange: bytes=0-\r\n\r\n" % (self.file_index, self.remote_file_name)
@@ -140,7 +140,7 @@ class DownloadOutContext(IContext):
             _, status, _ = header[0].split()
             # Check status
             if int(status) != 200:
-                self.handler.reactor.downloader(DownloadEventId.FILE_NOT_FOUND, self.handler)
+                self.handler.reactor.servent.on_download(DownloadEventId.FILE_NOT_FOUND, self.handler)
                 self.handler.handle_close()
                 return
             # finding Content-length field and extract file size
@@ -159,7 +159,7 @@ class DownloadOutContext(IContext):
             if self.num_bytes == self.max_bytes:
                 self.logger.debug("Get entire file")
                 self.out_file.close()
-                self.handler.reactor.downloader(DownloadEventId.DOWNLOAD_COMPLETE, self.handler)
+                self.handler.reactor.servent.on_download(DownloadEventId.DOWNLOAD_COMPLETE, self.handler)
                 self.handler.handle_close()
         return
     
@@ -167,9 +167,9 @@ class DownloadOutContext(IContext):
         if self.out_file:
             self.out_file.close()            
         if self.num_bytes == 0 and not self.got_response and self.sent_request:
-            self.handler.reactor.downloader(DownloadEventId.CONNECTION_REFUSE, self.handler)
+            self.handler.reactor.servent.on_download(DownloadEventId.CONNECTION_REFUSE, self.handler)
         elif self.num_bytes > 0 and self.num_bytes < self.max_bytes and self.got_response:
-            self.handler.reactor.downloader(DownloadEventId.DOWNLOAD_INCOMPLETE, self.handler)        
+            self.handler.reactor.servent.on_download(DownloadEventId.DOWNLOAD_INCOMPLETE, self.handler)        
         return
     
 class DownloadInContext(IContext):

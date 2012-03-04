@@ -9,10 +9,11 @@ def test_message():
     assert_equal(msg.hops, 0)
     assert_equal(msg.payload_length, None)
     assert_equal(msg.payload_descriptor, None)
+    assert_not_equals(msg.message_id, None)
     PingBody(msg)
     
     # test serialization
-    expected_message = '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00\x00\x00'
+    expected_message = msg.message_id + '\x00\x07\x00\x00\x00\x00\x00'
     ser = msg.serialize()
     assert_equal(ser, expected_message)
     

@@ -2,7 +2,7 @@ from pygnutella.servent import Servent
 from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
 from pygnutella.utils import print_hex
-import pygnutella.scheduler
+from pygnutella.scheduler import loop as scheduler_loop, CallEvery
 import logging, sys
 
 
@@ -22,9 +22,14 @@ def receiver(connection_handler, message):
     print_hex(message.serialize())
     return
 
+def timeout():
+    print "hello world"
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')                        
     servent = Servent()
+    # call back every 5.1 seconds
+    CallEvery(5.1, timeout) 
     if len(sys.argv) > 2:
         servent.reactor.gnutella_connect((sys.argv[1], int(sys.argv[2])))
-    pygnutella.scheduler.loop()
+    scheduler_loop()

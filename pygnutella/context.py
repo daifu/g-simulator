@@ -11,7 +11,7 @@ class IContext:
     on_read is called when an input (i.e data) comes in. on_read return a state.
     The current state (i.e. self variable) or new state. 
     """
-    def __init__(self, handler):
+    def __init__(self, handler, data=None):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.handler = handler
         return
@@ -22,3 +22,12 @@ class IContext:
     def on_close(self):
         raise NotImplementedError
         
+class DeadContext(IContext):
+    """
+    Do nothing Context
+    """
+    def on_read(self):
+        return
+    
+    def on_close(self):
+        return

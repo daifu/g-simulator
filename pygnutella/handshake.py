@@ -103,9 +103,8 @@ class DownloadEventId:
     CONNECTION_REFUSE = 0
     FILE_NOT_FOUND = 1
     BAD_FILE_PATH = 2
-    DOWNLOAD_INCOMPLETE = 2
-    DOWNLOAD_COMPLETE = 3
-    SEARCH_FILE = 4
+    DOWNLOAD_INCOMPLETE = 3
+    DOWNLOAD_COMPLETE = 4
     BAD_REQUEST = 5
     
 class DownloadOutContext(IContext):
@@ -141,7 +140,7 @@ class DownloadOutContext(IContext):
             header = self.handler.received_data[:first_index].split('\r\n')
             self.handler.received_data = self.handler.received_data[first_index+4:]
             # getting status
-            _, status, _ = header[0].split()
+            status = header[0].split()[1]
             # Check status
             if int(status) != 200:
                 self.handler.reactor.servent.on_download(DownloadEventId.FILE_NOT_FOUND, self.handler)
@@ -193,10 +192,28 @@ class DownloadInContext(IContext):
             self.handler.received_data = self.handler.received_data[first_index+4:]
             method, path, version = header[0].split()
             if method == "GET" and version == "HTTP/1.0" and HTTP_PATH_VALIDATOR.match(path) is not None:
+                self.logger.debug("request is validated")
                 self.file_id, self.file_name = HTTP_PATH_VALIDATOR.split(path)[1:3]
                 # Ask servent to get file content for file_id and file_name
+                self.file_content = self.handler.reactor.servent.get_file_content(self.file_id, self.file_name)
+                if self.file_content:                    
+                    size = len(self.file_content)
+                    response = "HTTP 200 OK\r\nServer: Gnutella\r\nContent-type: application/binary\r\nContent-length: %s\r\n\r\n" % size
+                    self.handler.write(response)
+                    self.logger.debug("file found and send response")
+                    self.logger.debug(response)
+                    self.logger.debug("send content")
+                    self.handler.write(self.file_content)
+                    self.logger.debug(self.file_content)
+                else:
+                    bad_response = "HTTP 404 Not Found\r\n\r\n"
+                    self.handler.write(bad_response)
+                    self.logger.debug("file found and send failed response")
+                    self.logger.debug(bad_response)
+                    self.handler.handle_close()
             else:
                 self.handler.reactor.servent.on_download(DownloadEventId.BAD_REQUEST, self.handler)
+                self.handler.handle_close()
                 
     def on_close(self):
         return

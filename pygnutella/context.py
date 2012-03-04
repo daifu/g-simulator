@@ -18,4 +18,7 @@ class IContext:
     
     def on_read(self):
         raise NotImplementedError
+    
+    def on_close(self):
+        raise NotImplementedError
         

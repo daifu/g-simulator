@@ -57,36 +57,34 @@ class Servent:
         on event of receiving a message from an existing connection 
         """
         self.logger.debug('Receive message from %s', connection_handler.socket.getsockname())
-        # decrease ttl and increase hop
-        hops = message.get_hops()
-        message_id = message.get_message_id()
-        if message.get_payload_descriptor() == GnutellaBodyId.PING:
+
+        if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
-            if (message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                 
+            if (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                 
                 # send Ping to any neighbor that not the one servent recceived the Ping from
                 self.flood(connection_handler, message)
                 # add ping to forwarding table to forward PONG
-                self.forwarding_table[(message_id, GnutellaBodyId.PONG)] = connection_handler
+                self.forwarding_table[(message.message_id, GnutellaBodyId.PONG)] = connection_handler
                 # reply with Pong (the return trip's ttl should be equals to hops)
-                pong_message = Message(message_id, hops, 0)              
+                pong_message = Message(message.message_id, message.hops, 0)              
                 PongBody(pong_message, self.reactor.ip, self.reactor.port, self.num_files, self.num_kilobytes)
-                connection_handler.send_message(pong_message)
-        elif message.get_payload_descriptor() == GnutellaBodyId.PONG:
+                connection_handler.write(pong_message.serialize())
+        elif message._payload_descriptor == GnutellaBodyId.PONG:
             # forwarding pong                 
             self.forward(message)
-        elif message.get_payload_descriptor() == GnutellaBodyId.QUERY:
+        elif message.payload_descriptor == GnutellaBodyId.QUERY:
             # check if we saw this query before. If not, then process
-            if message_id not in self.query_list:
+            if (message.message_id, GnutellaBodyId.QUERYHIT) not in self.forwarding_table:
                 # add to forwarding table to forward QUERYHIT
-                self.forwarding_table[(message_id, GnutellaBodyId.QUERYHIT)] = connection_handler
+                self.forwarding_table[(message.message_id, GnutellaBodyId.QUERYHIT)] = connection_handler
                 # forward query packet to neighbor servent
                 self.flood(connection_handler, message)
-        elif message.get_payload_descriptor() == GnutellaBodyId.QUERYHIT:
+        elif message.payload_descriptor == GnutellaBodyId.QUERYHIT:
             # add to forwarding table to forward PUSH
-            self.forwarding_table[(message_id, GnutellaBodyId.PUSH)] = connection_handler
+            self.forwarding_table[(message.message_id, message.body.servent_id, GnutellaBodyId.PUSH)] = connection_handler
             # forwarding query hit
             self.forward(message)
-        elif message.get_payload_descriptor() == GnutellaBodyId.PUSH:
+        elif message.payload_descriptor == GnutellaBodyId.PUSH:
             if message.body.servent_id == self.id:
                 pass
             else:
@@ -115,8 +113,11 @@ class Servent:
             return        
         try:
             message.decrease_ttl()
-            message.increase_hop()
-            self.forwarding_table[(message.get_message_id, message.get_payload_descriptor)].send_message(message)
+            packet = message.serialize()
+            if message.payload_descriptor != GnutellaBodyId.PUSH:
+                self.forwarding_table[(message.message_id, message.payload_descriptor)].write(packet)
+            else:
+                self.forwarding_table[(message.message_id, message.body.servent_id, message.payload_descriptor)].write(packet)
         except KeyError:
             pass
             
@@ -128,7 +129,6 @@ class Servent:
         if message.get_ttl() < 2:
             return
         message.decrease_ttl()
-        message.increase_hop()
         self.reactor.broadcast_except_for(connection_handler, message)
         return
            
@@ -176,9 +176,9 @@ class RandomWalkServent(Servent):
         if message.get_ttl() < 2:
             return
         message.decrease_ttl()
-        message.increase_hop()
+        packet = message.serialize()
         for handler in self.reactor.channels:
             if not handler == connection_handler:
                 if random.randint(0, 10) & 1:
-                    handler.send_message(message)
+                    handler.write(packet)
         

@@ -34,10 +34,7 @@ class Servent:
         self.reactor = Reactor(port)
         self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect, self.on_download)      
         return
-    
-    def run(self, timeout=30):
-        self.reactor.run(timeout)
-    
+        
     def on_accept(self):
         """
         on event of gnutella connection, accept or refuse depends on

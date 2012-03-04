@@ -105,15 +105,6 @@ class Reactor:
             return False 
         return True
     
-    def run(self, timeout = 30):
-        assert callable(self.acceptor)
-        assert callable(self.connector)
-        assert callable(self.receiver)
-        assert callable(self.disconnector)
-        assert callable(self.downloader)
-        self.logger.debug("run(%s)", timeout)
-        asyncore.loop(timeout);
-        return
 
 class ServerHandler(asyncore.dispatcher):
     """

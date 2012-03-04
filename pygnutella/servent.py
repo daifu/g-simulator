@@ -32,7 +32,7 @@ class Servent:
         self.num_kilobytes /= 1000 # shrink the unit
         # create Reactor class for socket management
         self.reactor = Reactor(port)
-        self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect)      
+        self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect, self.on_download)      
         return
     
     def run(self, timeout=30):

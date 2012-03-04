@@ -27,6 +27,8 @@ class Reactor:
             call when you receive a message which is defined by message.deserialize()
         + disconnector(connection_handler): 
             call AFTER connection is closed
+        + downloader(event_id, connection_handler):
+            call when there is a problem with a download connection
         
         2. Event Loop:
         reactor.run()
@@ -70,16 +72,18 @@ class Reactor:
         except ValueError:
             pass        
     
-    def install_handlers(self, acceptor, connector, receiver, disconnector):
+    def install_handlers(self, acceptor, connector, receiver, disconnector, downloader):
         self.logger.debug("install_handlers()")
         assert callable(acceptor)
         assert callable(connector)
         assert callable(receiver)
         assert callable(disconnector)
+        assert callable(downloader)
         self.acceptor = acceptor
         self.connector = connector
         self.receiver = receiver
         self.disconnector = disconnector
+        self.downloader = downloader
         return
     
     def gnutella_connect(self, address):
@@ -106,6 +110,7 @@ class Reactor:
         assert callable(self.connector)
         assert callable(self.receiver)
         assert callable(self.disconnector)
+        assert callable(self.downloader)
         self.logger.debug("run(%s)", timeout)
         asyncore.loop(timeout);
         return

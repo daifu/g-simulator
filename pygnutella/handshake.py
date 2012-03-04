@@ -35,7 +35,7 @@ class HandShakeCompleteContext(IContext):
 
 class HandShakeInContext(IContext):
     def __init__(self, handler, data=None):
-        IContext.__init__(self, handler)
+        IContext.__init__(self, handler, data)
         self.on_read()
         return
     
@@ -99,7 +99,18 @@ class ProbeContext(IContext):
 class DownloadOutContext(IContext):
     def __init__(self, handler, data):
         IContext.__init__(self, handler, data)
-        self.file_index, self.file_name = data
+        self.file_index, self.remote_file_name, self.local_file_name = data
+        request = "GET /get/%s/%s/ HTTP/1.0\r\nConnection: Keep-Alive\r\nRange: bytes=0-\r\n\r\n" % (self.file_index, self.remote_file_name)
+        self.handler.write(request)
+        self.logger.debug("sending request")
+        self.logger.debug(request)
+        self.on_read()
+        return
+    
+    def on_read(self):
+        return
+    
+    def on_close(self):
         return
     
 class DownloadInContext(IContext):

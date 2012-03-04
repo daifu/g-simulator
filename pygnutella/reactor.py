@@ -89,10 +89,10 @@ class Reactor:
             return False 
         return True
     
-    def download_connect(self, address):
+    def download_connect(self, address, file_index, file_name):
         self.logger.debug("gnutella_connect() -> %s", address)
         try:
-            ConnectionHandler(reactor = self, context_class = DownloadOutContext, address = address)
+            ConnectionHandler(reactor = self, context_class = DownloadOutContext, context_data = (file_index, file_name), address = address)
         except:
             return False 
         return True

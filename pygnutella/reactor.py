@@ -83,8 +83,11 @@ class Reactor:
     
     def make_outgoing_connection(self, address):
         self.logger.debug("make_outgoing_connection() -> %s", address)
-        ConnectionHandler(reactor = self, address = address)
-        return
+        try:
+            ConnectionHandler(reactor = self, address = address)
+        except:
+            return False 
+        return True
     
     def run(self, timeout = 30):
         assert callable(self.acceptor)

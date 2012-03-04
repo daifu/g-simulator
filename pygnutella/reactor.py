@@ -65,11 +65,11 @@ class Reactor:
                 connection_handler.send_message(message)
         return
     
-    def add_channel(self, handler):        
+    def add_channel(self, handler):     
         self.channels.append(handler)
         return
     
-    def remove_channel(self, handler):        
+    def remove_channel(self, handler):      
         try:                
             self.channels.remove(handler)
         except ValueError:
@@ -77,6 +77,10 @@ class Reactor:
     
     def install_handlers(self, acceptor, connector, receiver, disconnector):
         self.logger.debug("install_handlers()")
+        assert callable(acceptor)
+        assert callable(connector)
+        assert callable(receiver)
+        assert callable(disconnector)
         self.acceptor = acceptor
         self.connector = connector
         self.receiver = receiver

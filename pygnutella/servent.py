@@ -31,8 +31,7 @@ class Servent:
             self.num_kilobytes += f.file_size
         self.num_kilobytes /= 1000 # shrink the unit
         # create Reactor class for socket management
-        self.reactor = Reactor(port)
-        self.reactor.install_handlers(self.on_accept, self.on_connect, self.on_receive, self.on_disconnect, self.on_download)      
+        self.reactor = Reactor(self, port)      
         return
         
     def on_accept(self):

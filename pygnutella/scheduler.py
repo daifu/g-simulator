@@ -1,7 +1,6 @@
 """
 A heapq-based scheduler for asyncore.
 
-Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
 License: MIT
 """
 
@@ -182,7 +181,7 @@ def close_all(socket_map=None, ignore_all=False):
     del _tasks[:]
 
 
-def loop(timeout=0.001, use_poll=False, socket_map=None, count=None):
+def loop(timeout=30, use_poll=False, socket_map=None, count=None):
     """Start asyncore and scheduler loop.
     Use this as replacement of the original asyncore.loop() function.
     """
@@ -194,10 +193,16 @@ def loop(timeout=0.001, use_poll=False, socket_map=None, count=None):
         socket_map = asyncore.socket_map
     if count is None:
         while (socket_map or _tasks):
-            poll_fun(timeout, socket_map)
             _scheduler()
+            if _tasks:
+                poll_fun(_tasks[0].timeout, socket_map)
+            else:
+                poll_fun(timeout, socket_map)            
     else:
         while (socket_map or _tasks) and count > 0:
-            poll_fun(timeout, socket_map)
             _scheduler()
+            if _tasks:
+                poll_fun(_tasks[0].timeout, socket_map)
+            else:
+                poll_fun(timeout, socket_map)
             count -= 1

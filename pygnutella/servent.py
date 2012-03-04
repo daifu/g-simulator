@@ -105,6 +105,9 @@ class Servent:
             del self.forwarding_table[k]
         return
     
+    def on_download(self, event_id, connection_handler):
+        return
+    
     def forward(self, message):
         """
         Forward message to correct servent in according to forwarding table

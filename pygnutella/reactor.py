@@ -3,7 +3,6 @@ import logging
 import socket
 import utils
 from handshake import HandShakeOutContext, HandShakeInContext
-from utils import print_hex
 
 class Reactor:
     """
@@ -52,12 +51,7 @@ class Reactor:
         handler = ServerHandler(reactor = self, port = port)
         self.add_channel(handler)
         return
-    
-    def send(self, handler, message):
-        self.logger.debug("send() -> %s", message.serialize())        
-        handler.send_message(message)
-        return
-    
+        
     def broadcast_except_for(self, handler, message):
         self.logger.debug("broadcast_except_for() -> %s", message.serialize())
         for connection_handler in self.channels:
@@ -93,8 +87,10 @@ class Reactor:
         return
     
     def run(self, timeout = 30):
-        if not (self.acceptor and self.connector and self.disconnector and self.receiver):
-            raise ValueError
+        assert callable(self.acceptor)
+        assert callable(self.connector)
+        assert callable(self.receiver)
+        assert callable(self.disconnector)
         self.logger.debug("run(%s)", timeout)
         asyncore.loop(timeout);
         return
@@ -160,13 +156,7 @@ class ConnectionHandler(asyncore.dispatcher):
         else:
             raise ValueError                                        
         return
-    
-    def send_message(self, message):
-        self.logger.debug('send_message()')
-        print_hex(message.serialize())
-        self.write(message.serialize())
-        return
-    
+        
     def write(self, data):
         self.data_to_write += data
         return
@@ -179,8 +169,7 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_close(self):
         self.logger.debug('handle_close()')        
         self.close()
-        self.reactor.disconnector(self)
-        self.reactor.remove_channel(self)        
+        self.context.on_close()       
         return
     
     def handle_read(self):

@@ -4,7 +4,7 @@ from pygnutella.reactor import Reactor
 def setup_func():
     global reactor
     reactor = Reactor()
-    assert_not_equal(reactor.channels, [])
+    assert_equal(reactor.channels, [])
 
 @with_setup(setup_func)
 

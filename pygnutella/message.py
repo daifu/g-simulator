@@ -26,9 +26,8 @@ class Message:
         self.hop = self.hop + value
     
     def serialize(self):
-        assert self.body
-        assert self.payload_descriptor
-        assert self.payload_length
+        assert self.body != None
+        assert self.payload_descriptor != None
         payload = self.body.serialize()
         self.payload_length = len(payload)
         header = pack(self.fmt, self.message_id, self.payload_descriptor, self.ttl, self.hops, self.payload_length)        

@@ -42,16 +42,11 @@ class Reactor:
         + address is a tuple of (addr, port)        
     """
     
-    def __init__(self, port = 0):
+    def __init__(self, servent, port = 0):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
-        self.connector = None
-        self.disconnector = None
-        self.error = None
-        self.receiver = None
-        self.acceptor = None
+        self.servent = servent
         self.channels = []
-        handler = ServerHandler(reactor = self, port = port)
-        self.add_channel(handler)
+        self.server_handler = ServerHandler(reactor = self, port = port)        
         return
         
     def broadcast_except_for(self, handler, message):
@@ -71,21 +66,7 @@ class Reactor:
             self.channels.remove(handler)
         except ValueError:
             pass        
-    
-    def install_handlers(self, acceptor, connector, receiver, disconnector, downloader):
-        self.logger.debug("install_handlers()")
-        assert callable(acceptor)
-        assert callable(connector)
-        assert callable(receiver)
-        assert callable(disconnector)
-        assert callable(downloader)
-        self.acceptor = acceptor
-        self.connector = connector
-        self.receiver = receiver
-        self.disconnector = disconnector
-        self.downloader = downloader
-        return
-    
+        
     def gnutella_connect(self, address):
         self.logger.debug("gnutella_connect() -> %s", address)
         try:

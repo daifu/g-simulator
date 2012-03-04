@@ -95,6 +95,12 @@ class ProbeContext(IContext):
     
     def on_close(self):
         return
+
+class DownloadEventId:
+    CONNECTION_REFUSE = 0
+    FILE_NOT_FOUND = 1
+    DOWNLOAD_INCOMPLETE = 2
+    DOWNLOAD_COMPLETE = 3
     
 class DownloadOutContext(IContext):
     def __init__(self, handler, data):
@@ -104,6 +110,8 @@ class DownloadOutContext(IContext):
         self.handler.write(request)
         self.logger.debug("sending request")
         self.logger.debug(request)
+        self.num_bytes = 0
+        self.max_bytes = 0
         self.on_read()
         return
     
@@ -111,6 +119,10 @@ class DownloadOutContext(IContext):
         return
     
     def on_close(self):
+        if self.num_bytes == 0:
+            self.handler.reactor.downloader(DownloadEventId.CONNECTION_REFUSE, self.handler)
+        else:
+            self.handler.reactor.downloader(DownloadEventId.DOWNLOAD_INCOMPLETE, self.handler)
         return
     
 class DownloadInContext(IContext):

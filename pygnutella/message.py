@@ -20,44 +20,15 @@ class Message:
         self.payload_descriptor = None
         self.fmt = '!16sbbbI'
         self.HEADER_LENGTH = calcsize(self.fmt)
-        
-    def set_body(self, body):
-        self.body = body
-        
-    def get_body(self):
-        return self.body
-    
-    def set_payload_length(self, payload_length):
-        self.payload_length = payload_length
-        
-    def get_payload_length(self):
-        return self.payload_length
-    
-    def set_payload_descriptor(self, payload_descriptor):
-        self.payload_descriptor = payload_descriptor
-        
-    def get_payload_descriptor(self):
-        return self.payload_descriptor
-
-    def set_message_id(self, new_id):
-        self.message_id = new_id
-
-    def get_message_id(self):
-        return self.message_id
-    
-    def get_ttl(self):
-        return self.ttl
-    
-    def get_hops(self):
-        return self.hops
-    
+            
     def decrease_ttl(self, value=1):
         self.ttl = self.ttl - value
-
-    def increase_hop(self, value=1):
         self.hop = self.hop + value
     
-    def serialize(self):             
+    def serialize(self):
+        assert self.body
+        assert self.payload_descriptor
+        assert self.payload_length
         payload = self.body.serialize()
         self.payload_length = len(payload)
         header = pack(self.fmt, self.message_id, self.payload_descriptor, self.ttl, self.hops, self.payload_length)        
@@ -68,7 +39,11 @@ class Message:
             return None
         self.message_id, self.payload_descriptor, self.ttl, self.hops, self.payload_length = unpack(self.fmt, raw_data[:self.HEADER_LENGTH])
         # Check for error heuristically in connection stream
-        if not (self.payload_descriptor == GnutellaBodyId.PING or self.payload_descriptor == GnutellaBodyId.PONG or self.payload_descriptor == GnutellaBodyId.PUSH or self.payload_descriptor == GnutellaBodyId.QUERY or self.payload_descriptor == GnutellaBodyId.QUERYHIT):
+        if not (self.payload_descriptor == GnutellaBodyId.PING or 
+                self.payload_descriptor == GnutellaBodyId.PONG or 
+                self.payload_descriptor == GnutellaBodyId.PUSH or 
+                self.payload_descriptor == GnutellaBodyId.QUERY or 
+                self.payload_descriptor == GnutellaBodyId.QUERYHIT):
             raise ValueError
         if self.hops + self.ttl > self.MAXIMUM_SUM_TTL_HOPS:
             raise ValueError
@@ -91,6 +66,3 @@ class Message:
         if self.body.deserialize(raw_data[:self.payload_length]):
             raise ValueError
         return self.payload_length + self.HEADER_LENGTH
-        
-        
-    

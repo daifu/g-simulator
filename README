@@ -1,13 +1,14 @@
 Check required packages
 =======================
 
-Go to the current direcotry(under g-simulator), and run:
+Go to the current directory(under g-simulator), and run:
 > python setup.py
 
 It will check all the required packages and install nose if your system does
 not have.
 
 Run all the tests.
+> nosetests
 
 Coding Standard
 =======================

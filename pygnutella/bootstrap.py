@@ -11,6 +11,8 @@ class Command:
     # CONNECT 127.0.1.1 8934
     CONNECT = "CONNECT"
     START = "START"
+    ON = "ON"
+    INFO = "INFO"
 
 class Event:
     """
@@ -22,7 +24,23 @@ class Event:
     # ON LISTENNING <id-hex-string> 127.0.1.1 8945
     LISTENING = "LISTENNING"
     RECEIVED = "RECEIVED"
-   
+
+
+def construct_command(cmd, **kwargs):
+    if cmd == Command.CONNECT:
+        return "%s %s %s" % (Command.CONNECT, kwargs['ip'], kwargs['port'])
+    elif cmd == Command.START:
+        return Command.START
+    else:
+        raise ValueError
+
+def deconstruct_command(raw_cmd):
+    tokens = raw_cmd.split()
+    cmd = tokens[0]
+    if cmd == Command.CONNECT:
+        return {'command': cmd, 'ip': tokens[1], 'port': tokens[2]}
+    return None
+
 def create_gnutella_node(servent_class, pipe, files):
     servent = servent_class()
     # TODO: fixed this

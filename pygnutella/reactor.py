@@ -143,6 +143,7 @@ class ConnectionHandler(asyncore.dispatcher):
         self.reactor = reactor
         self.chunk_size = chunk_size
         self._close_when_done = close_when_done
+        self.context = context_class(self, context_data)        
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -152,7 +153,7 @@ class ConnectionHandler(asyncore.dispatcher):
             asyncore.dispatcher.__init__(self, sock=sock)
         else:
             raise ValueError
-        self.context = context_class(self, context_data)
+
         return
         
     def write(self, data):

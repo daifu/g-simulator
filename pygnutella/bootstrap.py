@@ -60,7 +60,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
+        #print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -103,7 +103,7 @@ class BootstrapOutHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
+        #print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -123,24 +123,40 @@ class BootstrapOutHandler(asynchat.async_chat):
         asynchat.async_chat.handle_close(self)
 
 def _create_gnutella_node(servent_class, bootstrap_address, files = []):
-    servent = servent_class()
-    servent.reactor.bootstrap_connect(bootstrap_address)
+    servent_class(files = files, bootstrap_address = bootstrap_address)
     try:
         scheduler_loop()
     finally:
         close_all()
 
-def create_gnutella_network(preferred, bootstrap_cls = SimpleBootstrap):   
-    # start up bootstrap node
-    bootstrap_node = bootstrap_cls()
-    
-    # create servent process and pass in prefered servent_class, bootstrap address
-    # TODO: add an extra parameter to pass in file list
-    for servent_cls in preferred:  
-        Process(target = _create_gnutella_node, args=(servent_cls, bootstrap_node.address)).start()
-
+def _create_bootstrap_node(bootstrap):
     # run scheduler loop for bootstrap node
     try:
         scheduler_loop()
     finally:
         close_all()
+    
+
+def create_gnutella_network(preferred, bootstrap_cls = SimpleBootstrap):   
+    processes = []
+    # start up bootstrap node
+    bootstrap_node = bootstrap_cls()
+    address = bootstrap_node.address
+    p = Process(target = _create_bootstrap_node, args = (bootstrap_node,))
+    p.start()
+    processes.append(p)
+    
+    # create servent process and pass in prefered servent_class, bootstrap address
+    # TODO: add an extra parameter to pass in file list    
+    for servent_cls in preferred:
+        p = Process(target = _create_gnutella_node, args=(servent_cls, address))
+        p.start()
+        processes.append(p)
+
+    # run scheduler loop for bootstrap node
+    try:
+        for process in processes:
+            process.join()
+    finally:
+        for process in processes:
+            process.terminate()

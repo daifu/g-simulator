@@ -1,114 +1,132 @@
-import asyncore, socket
-from servent import Servent
-from multiprocessing import Process, Pipe
-from scheduler import loop as scheduler_loop
+import asyncore, asynchat, socket
+from multiprocessing import Process
+from scheduler import loop as scheduler_loop, close_all
 
-_nodes = []
-
-class Bootstrap(asyncore.dispatcher):
+class SimpleBootstrap(asyncore.dispatcher):
+    _nodes = []
+    
     def __init__(self, port = 0):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        # bind socket to a public ip (not localhost or 127.0.0.1
+        # bind socket to a public ip (not localhost or 127.0.0.1)
         self.bind((socket.gethostname(), port))
         # get socket address for future use
-        self.ip, self.port = self.socket.getsockname()        
+        self.address = self.socket.getsockname()        
         # listening for incoming connection
         self.listen(5)        
         return
     
     def handle_accept(self):
         sock, _ = self.accept()
-        BootstrapHandler(sock)
+        BootstrapInHandler(sock)
 
-class BootstrapHandler(asyncore.dispatcher):
-    def __init__(self, sock, chunk_size = 512):
+    def add_node(self, address):
+        self._nodes.append(address)
+        
+    def get_node(self):
+        # return the last join node or empty list if _node is empty
+        # override this for more elaborate scheme of bootstrap
+        return self._nodes[-1:]
+
+
+class BootstrapMethod:
+    """
+    This is a list of method with sematic similar to HTTP
+    but the protocol is not that complicate
+    
+    + each message begin with one of following method followed by their parameters
+    + each message terminate by a newline
+    """
+    # GET no parameter
+    GET = 'GET'
+    # POST <ip> <port> post your node ip and address
+    POST = 'POST'
+    # PEER <ip> <port> bootstrap return a node with following ip and port
+    PEER = 'PEER' 
+    # CLOSE signal end of connection
+    CLOSE = 'CLOSE'
+    
+class BootstrapInHandler(asynchat.async_chat):
+    def __init__(self, sock, bootstrap):
         asyncore.dispatcher.__init__(self, sock=sock)
-        self.chunk_size = chunk_size
-        self._data_to_write = ''
-        self.received_data = ''
-        
-    def write(self, data):
-        self._data_to_write += data
-        return
-            
-    def writable(self):        
-        response = bool(self._data_to_write)       
-        return response
+        self._bootstrap = bootstrap
+        self.set_terminator('\n')
+        self._received_data = ''
+
+    def collect_incoming_data(self, data):
+        self._received_data += data
     
-    def handle_read(self):
-        self.received_data += self.recv(self.chunk_size)
-        while '\n' in self.received_data:
-            self.process_command()
-        return
+    def found_terminator(self):
+        self.process_message()
     
-    def process_command(self):
-        index_found = self.received_data.index('\n')
-        raw_command = self.received_data[:index_found]
-        self.received_data = self.received_data[index_found:]
-        command = deconstruct_command(raw_command)
-        if command.cmd == Command.CONNECT:
-            # TODO implement process command
-            pass
-        return
-        
-     
-
-class Command:
-    """
-    This is a list of command send from "bootstrap" process
-    to other process for setup.
-    """
-    # connect command have following ip and port
-    # CONNECT 127.0.1.1 8934
-    CONNECT = "CONNECT"
-    START = "START"
-    ON = "ON"
-    INFO = "INFO"
-
-class Event:
-    """
-    This is a list of event
-    
-    All event log begin with ON <event> <other parameters>
-    """
-    # example
-    # ON LISTENNING <id-hex-string> 127.0.1.1 8945
-    LISTENING = "LISTENNING"
-    RECEIVED = "RECEIVED"
-
-
-def construct_command(cmd, **kwargs):
-    if cmd == Command.CONNECT:
-        return "%s %s %s" % (Command.CONNECT, kwargs['ip'], kwargs['port'])
-    elif cmd == Command.START:
-        return Command.START
-    else:
-        raise ValueError
-
-def deconstruct_command(raw_cmd):
-    tokens = raw_cmd.split()
-    cmd = tokens[0]
-    if cmd == Command.CONNECT:
-        return {'command': cmd, 'ip': tokens[1], 'port': tokens[2]}
-    return None
-
-def create_gnutella_node(servent_class, pipe, files):
-    servent = servent_class()
-    # TODO: fixed this
-    pipe.send('ON LISTENNING %s %s %s' % ('myhex_id', '127.0.1.1', '3945'))
-    # TODO: receiving peer list
-    while True:
-        cmd = pipe.recv()        
-        if cmd == 'START':
-            break
+    def process_message(self):
+        tokens = self._received_data.split()
+        method = tokens[0]
+        args = tokens[1:]
+        if method  == BootstrapMethod.POST:
+            ip, port = args
+            self._bootstrap.add_node((ip, port))
+        elif method == BootstrapMethod.GET:
+            potential_partners = self._bootstrap.get_node()
+            for partner in potential_partners:
+                self.push('PEER %s %s\n' % partner)            
+            self.push(BootstrapMethod.CLOSE)
+            self.close_when_done()
+        elif method == BootstrapMethod.CLOSE:
+            self.handle_close()
         else:
-            # TODO process command
-            pass        
-    scheduler_loop()
-    pipe.close()
+            raise ValueError
+        
+class BootstrapOutHandler(asynchat.async_chat):
+    def __init__(self, node_address, bootstrap_address):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(bootstrap_address)
+        self._node_address = node_address
+        self._received_data = ''
+        self.peer_list = []
+        self.set_terminator('\n')
+    
+    def handle_connect(self):
+        message_params = (BootstrapMethod.POST,) + self.node_address
+        self.push('%s %s %s\n' % message_params)
+    
+    def collect_incoming_data(self, data):
+        self._received_data += data
+    
+    def found_terminator(self):
+        self.process_message()
+    
+    def process_message(self):
+        tokens = self._received_data.split()
+        method = tokens[0]
+        args = tokens[1:]
+        if method  == BootstrapMethod.PEER:
+            ip, port = args
+            self.peer_list.append((ip, port))
+        elif method == BootstrapMethod.CLOSE:
+            self.handle_close()
+        else:
+            raise ValueError
 
-def create_gnutella_network(num_nodes = 10, adjacent_list, preferred_list = []):
-    for _ in xrange(num_nodes):
-        parent_conn, child_conn = Pipe()
-        p = Process(target = create_gnutella_node, args=(Servent, child_conn,)).start()
+def _create_gnutella_node(servent_class, bootstrap_address, files = []):
+    servent_class()
+    try:
+        scheduler_loop()
+    finally:
+        close_all()
+
+def create_gnutella_network(preferred, bootstrap_cls = SimpleBootstrap):   
+    # start up bootstrap node
+    bootstrap_node = bootstrap_cls()
+    
+    # create servent process and pass in prefered servent_class, bootstrap address
+    # TODO: add an extra parameter to pass in file list
+    for servent_cls in preferred:  
+        Process(target = _create_gnutella_node, args=(servent_cls, bootstrap_node.address)).start()
+
+    # run scheduler loop for bootstrap node
+    try:
+        scheduler_loop()
+    finally:
+        close_all()

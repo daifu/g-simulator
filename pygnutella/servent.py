@@ -17,7 +17,7 @@ class FileInfo:
         self.file_size = file_size
    
 class Servent:
-    def __init__(self, port=0, files = []):
+    def __init__(self, port=0, files = [], bootstrap_address = None):
         self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         # forwarding table: (message_id, payload_type) -> connection_handler
         self.forwarding_table = {}        
@@ -31,7 +31,10 @@ class Servent:
             self.num_kilobytes += f.file_size
         self.num_kilobytes /= 1000 # shrink the unit
         # create Reactor class for socket management
-        self.reactor = Reactor(self, port)      
+        self.reactor = Reactor(self, port)
+        # check if bootstrap_address is given
+        if bootstrap_address:
+            self.reactor.bootstrap_connect(bootstrap_address)        
         return
         
     def on_accept(self):
@@ -104,6 +107,11 @@ class Servent:
     def on_download(self, event_id, connection_handler):
         # DO some logging or resource clean up in here
         return
+    
+    def on_bootstrap(self, peer_list):
+        # connect to all suggested peer
+        for peer_address in peer_list:
+            self.reactor.gnutella_connect(peer_address) 
     
     def forward(self, message):
         """

@@ -81,11 +81,12 @@ class BootstrapInHandler(asynchat.async_chat):
         self._received_data = ''
         
 class BootstrapOutHandler(asynchat.async_chat):
-    def __init__(self, node_address, bootstrap_address):
+    def __init__(self, node_address, bootstrap_address, servent = None):
         asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(bootstrap_address)
         self._node_address = node_address
+        self._servent = servent
         self._received_data = ''
         self.peer_list = []
         self.set_terminator('\n')
@@ -115,6 +116,11 @@ class BootstrapOutHandler(asynchat.async_chat):
             raise ValueError
         # clean the buffer
         self._received_data = ''
+    
+    def handle_close(self):
+        if self._servent:
+            self._servent.on_bootstrap(self.peer_list)
+        asynchat.async_chat.handle_close(self)
 
 def _create_gnutella_node(servent_class, bootstrap_address, files = []):
     servent = servent_class()

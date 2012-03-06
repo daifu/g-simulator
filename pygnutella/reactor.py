@@ -87,7 +87,9 @@ class Reactor:
     def bootstrap_connect(self, address):
         self.servent.logger.debug('bootstrap_connect() -> %s %s' % address)
         try:
-            self.bootstrap_handler = BootstrapOutHandler(node_address = self.address, bootstrap_address = address)
+            self.bootstrap_handler = BootstrapOutHandler(node_address = self.address, 
+                                                         bootstrap_address = address, 
+                                                         servent = self.servent)
         except:
             return False
         return True

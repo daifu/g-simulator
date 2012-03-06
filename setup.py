@@ -10,6 +10,8 @@ try:
     import socket
     import uuid
     import struct
+    import asynchat
+    import multiprocessing
     from subprocess import call
 
     print "All system required system package installed."
@@ -27,8 +29,5 @@ try:
     print "Run all unit tests"
     call('nosetests')
 except Exception, e:
-    print "No nose module, start installing nose"
-    call('sudo easy_install nose', shell=True)
-    print "Run all unit tests"
-    call('nosetests')
+    print "No nose module, please installing nose: sudo easy_install nose"
 

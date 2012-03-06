@@ -131,7 +131,7 @@ class DownloadOutContext(IContext):
         return
     
     def on_read(self):
-        if not self.got_response and self.handler.received_data.count('\r\n\r\n') > 0:
+        if not self.got_response and '\r\n\r\n' in self.handler.received_data:
             self.got_response = True
             # getting header of HTTP protocol
             first_index = self.handler.received_data.index('\r\n\r\n')
@@ -183,7 +183,7 @@ class DownloadInContext(IContext):
         return
     
     def on_read(self):
-        if not self.received_request and self.handler.received_data.count('\r\n\r\n') > 0:
+        if not self.received_request and '\r\n\r\n' in self.handler.received_data:
             self.received_request = True
             first_index = self.handler.received_data.index('\r\n\r\n')
             self._logger.debug("received request")

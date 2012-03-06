@@ -38,7 +38,7 @@ class BootstrapHandler(asyncore.dispatcher):
     
     def handle_read(self):
         self.received_data += self.recv(self.chunk_size)
-        while self.received_data.count('\n') > 0:
+        while '\n' in self.received_data:
             self.process_command()
         return
     

@@ -2,7 +2,7 @@ from pygnutella.servent import Servent
 from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
 from pygnutella.utils import print_hex
-from pygnutella.scheduler import loop as scheduler_loop, CallEvery
+from pygnutella.scheduler import loop as scheduler_loop, close_all
 import logging, sys
 
 
@@ -27,9 +27,11 @@ def timeout():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')                        
-    servent = Servent()
-    # call back every 5.1 seconds
-    CallEvery(5.1, timeout) 
-    if len(sys.argv) > 2:
-        servent.reactor.gnutella_connect((sys.argv[1], int(sys.argv[2])))
-    scheduler_loop()
+    servent1 = Servent()
+    servent2 = Servent()
+    servent2.reactor.gnutella_connect((servent1.reactor.address))
+    try:
+        scheduler_loop()
+    finally:
+        # clean up
+        close_all()

@@ -99,8 +99,9 @@ class ServerHandler(asyncore.dispatcher):
         # bind socket to a public ip (not localhost or 127.0.0.1
         self.bind((socket.gethostname(), port))
         # get socket address for future use
-        self.reactor.ip, self.reactor.port = self.socket.getsockname()
-        self.reactor.ip = utils.dotted_quad_to_num(self.reactor.ip)        
+        self.reactor.address = self.socket.getsockname()
+        self.reactor.ip = utils.dotted_quad_to_num(self.reactor.address[0])
+        self.reactor.port = self.reactor.address[1]        
         self._logger.debug('ServerHandler binding to %s', self.socket.getsockname())
         # listening for incoming connection
         self.listen(5)
@@ -138,6 +139,7 @@ class ConnectionHandler(asyncore.dispatcher):
         self.reactor = reactor
         self.chunk_size = chunk_size
         self._close_when_done = close_when_done                               
+        self.context = context_class(self, context_data)
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -146,8 +148,7 @@ class ConnectionHandler(asyncore.dispatcher):
         elif sock:            
             asyncore.dispatcher.__init__(self, sock=sock)
         else:
-            raise ValueError
-        self.context = context_class(self, context_data)                                     
+            raise ValueError                                             
         return
         
     def write(self, data):

@@ -3,7 +3,7 @@ from multiprocessing import Process
 from scheduler import loop as scheduler_loop, close_all
 
 class SimpleBootstrap(asyncore.dispatcher):
-    _nodes = []
+    nodes = []
     
     def __init__(self, port = 0):
         asyncore.dispatcher.__init__(self)
@@ -21,12 +21,12 @@ class SimpleBootstrap(asyncore.dispatcher):
         BootstrapInHandler(sock, self)
 
     def add_node(self, address):
-        self._nodes.append(address)
+        self.nodes.append(address)
         
     def get_node(self):
         # return the last join node or empty list if _node is empty
         # override this for more elaborate scheme of bootstrap
-        return self._nodes[-2:-1]
+        return self.nodes[-2:-1]
 
 
 class BootstrapMethod:

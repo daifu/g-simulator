@@ -18,7 +18,7 @@ class SimpleBootstrap(asyncore.dispatcher):
     
     def handle_accept(self):
         sock, _ = self.accept()
-        BootstrapInHandler(sock)
+        BootstrapInHandler(sock, self)
 
     def add_node(self, address):
         self._nodes.append(address)
@@ -48,7 +48,7 @@ class BootstrapMethod:
     
 class BootstrapInHandler(asynchat.async_chat):
     def __init__(self, sock, bootstrap):
-        asyncore.dispatcher.__init__(self, sock=sock)
+        asynchat.async_chat.__init__(self, sock=sock)
         self._bootstrap = bootstrap
         self.set_terminator('\n')
         self._received_data = ''
@@ -60,6 +60,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
+        print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -70,16 +71,18 @@ class BootstrapInHandler(asynchat.async_chat):
             potential_partners = self._bootstrap.get_node()
             for partner in potential_partners:
                 self.push('PEER %s %s\n' % partner)            
-            self.push(BootstrapMethod.CLOSE)
+            self.push("%s\n" % BootstrapMethod.CLOSE)
             self.close_when_done()
         elif method == BootstrapMethod.CLOSE:
             self.handle_close()
         else:
             raise ValueError
+        # clean the buffer
+        self._received_data = ''
         
 class BootstrapOutHandler(asynchat.async_chat):
     def __init__(self, node_address, bootstrap_address):
-        asyncore.dispatcher.__init__(self)
+        asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(bootstrap_address)
         self._node_address = node_address
@@ -88,8 +91,9 @@ class BootstrapOutHandler(asynchat.async_chat):
         self.set_terminator('\n')
     
     def handle_connect(self):
-        message_params = (BootstrapMethod.POST,) + self.node_address
+        message_params = (BootstrapMethod.POST,) + self._node_address
         self.push('%s %s %s\n' % message_params)
+        self.push("%s\n" % BootstrapMethod.GET)
     
     def collect_incoming_data(self, data):
         self._received_data += data
@@ -98,6 +102,7 @@ class BootstrapOutHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
+        print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -108,6 +113,8 @@ class BootstrapOutHandler(asynchat.async_chat):
             self.handle_close()
         else:
             raise ValueError
+        # clean the buffer
+        self._received_data = ''
 
 def _create_gnutella_node(servent_class, bootstrap_address, files = []):
     servent_class()

@@ -3,6 +3,8 @@ from servent import Servent
 from multiprocessing import Process, Pipe
 from scheduler import loop as scheduler_loop
 
+_nodes = []
+
 class Bootstrap(asyncore.dispatcher):
     def __init__(self, port = 0):
         asyncore.dispatcher.__init__(self)
@@ -41,6 +43,13 @@ class BootstrapHandler(asyncore.dispatcher):
         return
     
     def process_command(self):
+        index_found = self.received_data.index('\n')
+        raw_command = self.received_data[:index_found]
+        self.received_data = self.received_data[index_found:]
+        command = deconstruct_command(raw_command)
+        if command.cmd == Command.CONNECT:
+            # TODO implement process command
+            pass
         return
         
      
@@ -99,10 +108,7 @@ def create_gnutella_node(servent_class, pipe, files):
     scheduler_loop()
     pipe.close()
 
-_nodes = []
-
 def create_gnutella_network(num_nodes = 10, adjacent_list, preferred_list = []):
     for _ in xrange(num_nodes):
         parent_conn, child_conn = Pipe()
         p = Process(target = create_gnutella_node, args=(Servent, child_conn,)).start()
-        _nodes.append((parent_conn, p))

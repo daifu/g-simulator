@@ -2,12 +2,12 @@ import asyncore
 import socket
 import utils
 from handshake import HandShakeOutContext, DownloadOutContext, ProbeContext
+from bootstrap import BootstrapOutHandler
 
 class Reactor:
     """
         Reactor is socket management class using Reactor Design Pattern
         User should not make more than one instance of Reactor.
-        This will be enforce in the future by using Singleton Design Pattern
         
         3 Steps to use the class:
         
@@ -84,6 +84,13 @@ class Reactor:
             return False 
         return True
     
+    def bootstrap_connect(self, address):
+        self.servent.logger.debug('bootstrap_connect() -> %s %s' % address)
+        try:
+            self.bootstrap_handler = BootstrapOutHandler(node_address = self.address, bootstrap_address = address)
+        except:
+            return False
+        return True
 
 class ServerHandler(asyncore.dispatcher):
     """

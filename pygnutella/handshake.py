@@ -17,7 +17,7 @@ class HandShakeCompleteContext(IContext):
         return
     
     def on_read(self):
-        self._logger.debug("on_read()")
+        self.handler.reactor.servent.logger.debug("HandShakeCompleteContext: on_read()")
         try:
             msg = Message()
             msg_length = msg.deserialize(self.handler.received_data)
@@ -25,10 +25,10 @@ class HandShakeCompleteContext(IContext):
                 self.handler.received_data = self.handler.received_data[msg_length:]
                 self.handler.reactor.servent.on_receive(self.handler, msg)                
             else:
-                self._logger.debug("on_read() -> incomplete message")
+                self.handler.reactor.servent.logger.debug("-> incomplete message")
         except ValueError:
             # The message stream is messed up
-            self._logger.debug("on_read() -> mesage stream is messed up")
+            self.handler.reactor.servent.logger.debug("-> mesage stream is messed up")
             self.handler.handle_close()
             
     def on_close(self):
@@ -43,15 +43,15 @@ class HandShakeInContext(IContext):
         return
     
     def on_read(self):
-        self._logger.debug("on_read()")
+        self.handler.reactor.servent.logger.debug("HandShakeInContext: on_read()")
         size = len(HandShake.WELCOME_MESSAGE)
         if len(self.handler.received_data) >= size:
             if HandShake.WELCOME_MESSAGE == self.handler.received_data[:size]:
-                self._logger.debug("on_read() got Welcome Message")
+                self.handler.reactor.servent.logger.debug("got Welcome Message")
                 if self.handler.reactor.servent.on_accept():
                     self.handler.write(HandShake.RESPONSE_MESSAGE)
                     self.handler.received_data = self.handler.received_data[size:]
-                    self._logger.debug("transit to HandShakeCompleteContext")
+                    self.handler.reactor.servent.logger.debug("transit to HandShakeCompleteContext")
                     self.handler.context = HandShakeCompleteContext(self.handler)
                 else:
                     self.handler.handle_close()
@@ -63,18 +63,18 @@ class HandShakeOutContext(IContext):
     def __init__(self, handler, data=None):
         IContext.__init__(self, handler, data)
         self.handler.write(HandShake.WELCOME_MESSAGE)
-        self._logger.debug("sending Welcome Message")
+        self.handler.reactor.servent.logger.debug("HandShakeOutContext sending Welcome Message")
         self.on_read()
         return
     
     def on_read(self):
-        self._logger.debug("on_read()")
+        self.handler.reactor.servent.logger.debug("HandShakeOutContext: on_read()")
         size = len(HandShake.RESPONSE_MESSAGE)
         if len(self.handler.received_data) >= size:
             if HandShake.RESPONSE_MESSAGE == self.handler.received_data[:size]:
-                self._logger.debug("on_read() got Response Message")
+                self.handler.reactor.servent.logger.debug("got Response Message")
                 self.handler.received_data = self.handler.received_data[size:]
-                self._logger.debug("transit to HandShakeCompleteContext")
+                self.handler.reactor.servent.logger.debug("transit to HandShakeCompleteContext")
                 self.handler.context = HandShakeCompleteContext(self.handler)
             else:
                 self.handler.handle_close()
@@ -89,7 +89,7 @@ class ProbeContext(IContext):
         return
         
     def on_read(self):
-        self._logger.debug("on_read()")
+        self.handler.reactor.servent.logger.debug("ProbeContext: on_read()")
         if len(self.handler.received_data) >= 3:
             if self.handler.received_data[:3] == "GET":
                 self.handler.context = DownloadInContext(self.handler)
@@ -121,8 +121,8 @@ class DownloadOutContext(IContext):
             return        
         request = "GET /get/%s/%s/ HTTP/1.0\r\nConnection: Keep-Alive\r\nRange: bytes=0-\r\n\r\n" % (self.file_index, self.remote_file_name)
         self.handler.write(request)
-        self._logger.debug("sending request")
-        self._logger.debug(request)
+        self.handler.reactor.servent.debug("sending request")
+        self.handler.reactor.servent.logger.debug(request)
         self.sent_request = True
         self.got_response = False
         self.num_bytes = 0
@@ -135,8 +135,8 @@ class DownloadOutContext(IContext):
             self.got_response = True
             # getting header of HTTP protocol
             first_index = self.handler.received_data.index('\r\n\r\n')
-            self._logger.debug("received response")
-            self._logger.debug(self.handler.received_data[:first_index])
+            self.handler.reactor.serventdebug("received response")
+            self.handler.reactor.servent.logger.debug(self.handler.received_data[:first_index])
             header = self.handler.received_data[:first_index].split('\r\n')
             self.handler.received_data = self.handler.received_data[first_index+4:]
             # getting status
@@ -160,7 +160,7 @@ class DownloadOutContext(IContext):
             self.handler.received_data = ''
             # if we are at the end of the stream
             if self.num_bytes == self.max_bytes:
-                self._logger.debug("Get entire file")
+                self.handler.reactor.servent.debug("Get entire file")
                 self.out_file.close()
                 self.handler.reactor.servent.on_download(DownloadEventId.DOWNLOAD_COMPLETE, self.handler)
                 self.handler.handle_close()
@@ -186,13 +186,13 @@ class DownloadInContext(IContext):
         if not self.received_request and '\r\n\r\n' in self.handler.received_data:
             self.received_request = True
             first_index = self.handler.received_data.index('\r\n\r\n')
-            self._logger.debug("received request")
-            self._logger.debug(self.handler.received_data[:first_index])
+            self.handler.reactor.servent.debug("received request")
+            self.handler.reactor.servent.debug(self.handler.received_data[:first_index])
             header = self.handler.received_data[:first_index].split('\r\n')
             self.handler.received_data = self.handler.received_data[first_index+4:]
             method, path, version = header[0].split()
             if method == "GET" and version == "HTTP/1.0" and HTTP_PATH_VALIDATOR.match(path) is not None:
-                self._logger.debug("request is validated")
+                self.handler.reactor.servent.debug("request is validated")
                 self.file_id, self.file_name = HTTP_PATH_VALIDATOR.split(path)[1:3]
                 # Ask servent to get file content for file_id and file_name
                 self.file_content = self.handler.reactor.servent.get_file_content(self.file_id, self.file_name)
@@ -200,17 +200,17 @@ class DownloadInContext(IContext):
                     size = len(self.file_content)
                     response = "HTTP 200 OK\r\nServer: Gnutella\r\nContent-type: application/binary\r\nContent-length: %s\r\n\r\n" % size
                     self.handler.write(response)
-                    self._logger.debug("file found and send response")
-                    self._logger.debug(response)
+                    self.handler.reactor.servent.logger.debug("file found and send response")
+                    self.handler.reactor.servent.logger.debug(response)
                     self.handler.write(self.file_content)
                     self.handler.close_when_done()
-                    self._logger.debug("send content")
-                    self._logger.debug(self.file_content)
+                    self.handler.reactor.servent.logger.debug("send content")
+                    self.handler.reactor.servent.logger.debug(self.file_content)
                 else:
                     bad_response = "HTTP 404 Not Found\r\n\r\n"
                     self.handler.write(bad_response)
-                    self._logger.debug("file found and send failed response")
-                    self._logger.debug(bad_response)
+                    self.handler.reactor.servent.logger.debug("file found and send failed response")
+                    self.handler.reactor.servent.logger.debug(bad_response)
                     self.handler.handle_close()
             else:
                 self.handler.reactor.servent.on_download(DownloadEventId.BAD_REQUEST, self.handler)

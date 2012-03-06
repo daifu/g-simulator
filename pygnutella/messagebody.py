@@ -1,4 +1,3 @@
-import logging
 from struct import pack, unpack, calcsize
 
 class GnutellaBodyId:
@@ -13,7 +12,6 @@ class IMessageBody:
     This is the interface for all message body in Gnutella network
     """
     def __init__(self, message):
-        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.message = message
         self.message.body = self
         return

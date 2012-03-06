@@ -19,15 +19,7 @@ editor to do so.
 + test script is in directory tests
 + class name: class name capitalise every word
 + method name and variable name: lower case and underscore between every word
-+ make self.logger in every class as followed:
-
-	import logging
-    .....
-    # define variable
-    self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
-    .....
-    # usage just like printf
-    self.logger.debug('function() -> %s", variable)
++ use one logger from Servent
      
 + use doc string three quote """ """ for every class or function you feel the
 name is too ambiguous

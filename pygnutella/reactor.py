@@ -155,9 +155,6 @@ class ConnectionHandler(asyncore.dispatcher):
     def writable(self):        
         response = bool(self.data_to_write)
         self.logger.debug('writable() -> %s', response)
-        # check flag: close_after_last_write
-        if self.close_after_last_write and not response:
-            self.handle_close()
         return response
         
     def handle_close(self):
@@ -178,4 +175,7 @@ class ConnectionHandler(asyncore.dispatcher):
         self.logger.debug('handle_write()')
         sent = self.send(self.data_to_write)        
         self.data_to_write = self.data_to_write[sent:]
+        # check flag: close_after_last_write
+        if self.close_after_last_write and not bool(self.data_to_write):
+            self.handle_close()
         return

@@ -18,7 +18,7 @@ class FileInfo:
    
 class Servent:
     def __init__(self, port=0, files = []):
-        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
+        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         # forwarding table: (message_id, payload_type) -> connection_handler
         self.forwarding_table = {}        
         # create servent id
@@ -52,7 +52,7 @@ class Servent:
         """ 
         on event of receiving a message from an existing connection 
         """
-        self._logger.debug('Receive message from %s', connection_handler.socket.getsockname())
+        self.logger.debug('Receive message from %s', connection_handler.socket.getsockname())
 
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
@@ -93,7 +93,7 @@ class Servent:
         """ 
         servent behavior when leaving the network 
         """
-        self._logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
+        self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
         # resource clean up
         # clean up forwarding table
         remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]
@@ -102,6 +102,7 @@ class Servent:
         return
     
     def on_download(self, event_id, connection_handler):
+        # DO some logging or resource clean up in here
         return
     
     def forward(self, message):

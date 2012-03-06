@@ -1,6 +1,49 @@
+import asyncore, socket
 from servent import Servent
 from multiprocessing import Process, Pipe
 from scheduler import loop as scheduler_loop
+
+class Bootstrap(asyncore.dispatcher):
+    def __init__(self, port = 0):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        # bind socket to a public ip (not localhost or 127.0.0.1
+        self.bind((socket.gethostname(), port))
+        # get socket address for future use
+        self.ip, self.port = self.socket.getsockname()        
+        # listening for incoming connection
+        self.listen(5)        
+        return
+    
+    def handle_accept(self):
+        sock, _ = self.accept()
+        BootstrapHandler(sock)
+
+class BootstrapHandler(asyncore.dispatcher):
+    def __init__(self, sock, chunk_size = 512):
+        asyncore.dispatcher.__init__(self, sock=sock)
+        self.chunk_size = chunk_size
+        self._data_to_write = ''
+        self.received_data = ''
+        
+    def write(self, data):
+        self._data_to_write += data
+        return
+            
+    def writable(self):        
+        response = bool(self._data_to_write)       
+        return response
+    
+    def handle_read(self):
+        self.received_data += self.recv(self.chunk_size)
+        while self.received_data.count('\n') > 0:
+            self.process_command()
+        return
+    
+    def process_command(self):
+        return
+        
+     
 
 class Command:
     """

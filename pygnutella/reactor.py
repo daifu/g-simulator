@@ -129,13 +129,15 @@ class ConnectionHandler(asyncore.dispatcher):
         sock.setblocking(0)
         handler.set_socket(sock = sock)
     """    
-    def __init__(self, reactor, context_class, context_data = None, address = None, sock = None, chunk_size=512):        
+    def __init__(self, reactor, context_class, 
+                 context_data = None, address = None, sock = None, 
+                 chunk_size=512, close_when_done = False):        
         self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self._data_to_write = ''
         self.received_data = ''
         self.reactor = reactor
         self.chunk_size = chunk_size
-        self.close_after_last_write = False                               
+        self._close_when_done = close_when_done                               
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -176,6 +178,9 @@ class ConnectionHandler(asyncore.dispatcher):
         sent = self.send(self._data_to_write)        
         self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write
-        if self.close_after_last_write and not bool(self._data_to_write):
+        if self._close_when_done and not bool(self._data_to_write):
             self.handle_close()
         return
+    
+    def close_when_done(self):
+        self._close_when_done = True

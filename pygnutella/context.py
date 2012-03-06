@@ -12,7 +12,7 @@ class IContext:
     The current state (i.e. self variable) or new state. 
     """
     def __init__(self, handler, data=None):
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         self.handler = handler
         return
     

@@ -7,7 +7,7 @@ class Message:
     MAXIMUM_SUM_TTL_HOPS = 7
     
     def __init__(self, message_id = None, ttl = 7, hops = 0):
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         if message_id:
             self.message_id = message_id
         else:

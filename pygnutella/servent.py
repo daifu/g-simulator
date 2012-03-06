@@ -18,7 +18,7 @@ class FileInfo:
    
 class Servent:
     def __init__(self, port=0, files = [], bootstrap_address = None):
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         # forwarding table: (message_id, payload_type) -> connection_handler
         self.forwarding_table = {}        
         # create servent id
@@ -55,7 +55,7 @@ class Servent:
         """ 
         on event of receiving a message from an existing connection 
         """
-        self.logger.debug('Receive message from %s', connection_handler.socket.getsockname())
+        self.log('Receive message from %s', connection_handler.socket.getsockname())
 
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
@@ -96,7 +96,7 @@ class Servent:
         """ 
         servent behavior when leaving the network 
         """
-        self.logger.debug('disconnect from the network %s', connection_handler.socket.getsockname())
+        self.log('disconnect from the network %s', connection_handler.socket.getsockname())
         # resource clean up
         # clean up forwarding table
         remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]
@@ -108,10 +108,12 @@ class Servent:
         # DO some logging or resource clean up in here
         return
     
-    def on_bootstrap(self, peer_list):
+    def on_bootstrap(self, peer_address):
         # connect to all suggested peer
-        for peer_address in peer_list:
-            self.reactor.gnutella_connect(peer_address) 
+        self.reactor.gnutella_connect(peer_address) 
+    
+    def log(self, msg, *args, **kwargs):
+        self._logger.debug(msg, *args, **kwargs)
     
     def forward(self, message):
         """
@@ -198,4 +200,8 @@ class RandomWalkServent(Servent):
             if not handler == connection_handler:
                 if random.randint(0, 10) & 1:
                     handler.write(packet)
-        
+
+class SilentServent(Servent):
+    def log(self, msg, *args, **kwargs):
+        # Do nothing i.e. silent the output
+        pass

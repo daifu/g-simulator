@@ -48,7 +48,7 @@ class Reactor:
         return
         
     def broadcast_except_for(self, handler, message):
-        self.logger.debug("broadcast_except_for() -> %s", message.serialize())
+        self.log("broadcast_except_for() -> %s", message.serialize())
         packet = message.serialize()
         for connection_handler in self.channels:
             if not connection_handler == handler:
@@ -66,7 +66,7 @@ class Reactor:
             pass        
         
     def gnutella_connect(self, address):
-        self.servent.logger.debug("gnutella_connect() -> %s %s" % address)
+        self.servent.log("gnutella_connect() -> %s %s" % address)
         try:
             ConnectionHandler(reactor = self, context_class = HandShakeOutContext, address = address)
         except:
@@ -74,7 +74,7 @@ class Reactor:
         return True
     
     def download_connect(self, address, remote_file_index, remote_file_name, local_file_name):
-        self.servent.logger.debug("gnutella_connect() -> %s %s" % address)
+        self.servent.log("gnutella_connect() -> %s %s" % address)
         try:
             ConnectionHandler(reactor = self, 
                               context_class = DownloadOutContext, 
@@ -85,7 +85,7 @@ class Reactor:
         return True
     
     def bootstrap_connect(self, address):
-        self.servent.logger.debug('bootstrap_connect() -> %s %s' % address)
+        self.servent.log('bootstrap_connect() -> %s %s' % address)
         try:
             self.bootstrap_handler = BootstrapOutHandler(node_address = self.address, 
                                                          bootstrap_address = address, 
@@ -108,14 +108,14 @@ class ServerHandler(asyncore.dispatcher):
         self.reactor.address = self.socket.getsockname()
         self.reactor.ip = utils.dotted_quad_to_num(self.reactor.address[0])
         self.reactor.port = self.reactor.address[1]        
-        self.reactor.servent.logger.debug('ServerHandler binding to %s %s' % self.reactor.address)
+        self.reactor.servent.log('ServerHandler binding to %s %s' % self.reactor.address)
         # listening for incoming connection
         self.listen(5)
         return
     
     def handle_accept(self):
         sock, address = self.accept()
-        self.reactor.servent.logger.debug('handle_accept() -> %s %s' % address)
+        self.reactor.servent.log('handle_accept() -> %s %s' % address)
         ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
         return
     
@@ -147,13 +147,14 @@ class ConnectionHandler(asyncore.dispatcher):
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.reactor.servent.logger.debug('connecting to %s %s' % address)
+            self.reactor.servent.log('connecting to %s %s' % address)
+            self.address = address
             self.connect(address)
         elif sock:            
             asyncore.dispatcher.__init__(self, sock=sock)
+            self.address = self.socket.getpeername()
         else:
             raise ValueError
-
         return
         
     def write(self, data):
@@ -162,11 +163,11 @@ class ConnectionHandler(asyncore.dispatcher):
             
     def writable(self):        
         response = bool(self._data_to_write)
-        self.reactor.servent.logger.debug('writable() -> %s', response)
+        self.reactor.servent.log('writable() -> %s', response)
         return response
         
     def handle_close(self):
-        self.reactor.servent.logger.debug('handle_close()')        
+        self.reactor.servent.log('handle_close()')        
         self.close()
         self.context.on_close()       
         return
@@ -180,7 +181,7 @@ class ConnectionHandler(asyncore.dispatcher):
         """
             Write as much as possible
         """        
-        self.reactor.servent.logger.debug('handle_write()')
+        self.reactor.servent.log('handle_write()')
         sent = self.send(self._data_to_write)        
         self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write

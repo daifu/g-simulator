@@ -115,8 +115,7 @@ class ServerHandler(asyncore.dispatcher):
     def handle_close(self):
         self.logger.debug('handle_close()')
         self.close()
-        self.reactor.disconnector(self)
-        self.reactor.remove_channel(self)        
+        self.reactor.server_handler = None     
         return
     
 class ConnectionHandler(asyncore.dispatcher):

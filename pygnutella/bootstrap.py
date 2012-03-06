@@ -26,7 +26,7 @@ class SimpleBootstrap(asyncore.dispatcher):
     def get_node(self):
         # return the last join node or empty list if _node is empty
         # override this for more elaborate scheme of bootstrap
-        return self._nodes[-1:]
+        return self._nodes[-2:-1]
 
 
 class BootstrapMethod:

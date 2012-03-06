@@ -117,7 +117,8 @@ class BootstrapOutHandler(asynchat.async_chat):
         self._received_data = ''
 
 def _create_gnutella_node(servent_class, bootstrap_address, files = []):
-    servent_class()
+    servent = servent_class()
+    servent.reactor.bootstrap_connect(bootstrap_address)
     try:
         scheduler_loop()
     finally:

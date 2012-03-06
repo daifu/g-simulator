@@ -3,7 +3,7 @@ from pygnutella.message import Message
 from pygnutella.messagebody import PingBody
 from pygnutella.utils import print_hex
 from pygnutella.scheduler import loop as scheduler_loop, close_all
-import logging, sys
+import logging
 
 
 def connector(connection_handler):

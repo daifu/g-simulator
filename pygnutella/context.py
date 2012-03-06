@@ -1,5 +1,3 @@
-import logging
-
 class IContext:
     """
     IContext is a way to implement state in asynchronous network program

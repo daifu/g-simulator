@@ -43,14 +43,14 @@ class Reactor:
     """
     
     def __init__(self, servent, port = 0):
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         self.servent = servent
         self.channels = []
         self.server_handler = ServerHandler(reactor = self, port = port)        
         return
         
     def broadcast_except_for(self, handler, message):
-        self.logger.debug("broadcast_except_for() -> %s", message.serialize())
+        self._logger.debug("broadcast_except_for() -> %s", message.serialize())
         packet = message.serialize()
         for connection_handler in self.channels:
             if not connection_handler == handler:
@@ -68,7 +68,7 @@ class Reactor:
             pass        
         
     def gnutella_connect(self, address):
-        self.logger.debug("gnutella_connect() -> %s", address)
+        self._logger.debug("gnutella_connect() -> %s", address)
         try:
             ConnectionHandler(reactor = self, context_class = HandShakeOutContext, address = address)
         except:
@@ -76,7 +76,7 @@ class Reactor:
         return True
     
     def download_connect(self, address, remote_file_index, remote_file_name, local_file_name):
-        self.logger.debug("gnutella_connect() -> %s", address)
+        self._logger.debug("gnutella_connect() -> %s", address)
         try:
             ConnectionHandler(reactor = self, 
                               context_class = DownloadOutContext, 
@@ -93,7 +93,7 @@ class ServerHandler(asyncore.dispatcher):
     """
     def __init__(self, reactor, port):       
         self.reactor = reactor
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind socket to a public ip (not localhost or 127.0.0.1
@@ -101,19 +101,19 @@ class ServerHandler(asyncore.dispatcher):
         # get socket address for future use
         self.reactor.ip, self.reactor.port = self.socket.getsockname()
         self.reactor.ip = utils.dotted_quad_to_num(self.reactor.ip)        
-        self.logger.debug('ServerHandler binding to %s', self.socket.getsockname())
+        self._logger.debug('ServerHandler binding to %s', self.socket.getsockname())
         # listening for incoming connection
         self.listen(5)
         return
     
     def handle_accept(self):
         sock, address = self.accept()
-        self.logger.debug('handle_accept() -> %s', address)
+        self._logger.debug('handle_accept() -> %s', address)
         ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
         return
     
     def handle_close(self):
-        self.logger.debug('handle_close()')
+        self._logger.debug('handle_close()')
         self.close()
         self.reactor.server_handler = None     
         return
@@ -130,8 +130,8 @@ class ConnectionHandler(asyncore.dispatcher):
         handler.set_socket(sock = sock)
     """    
     def __init__(self, reactor, context_class, context_data = None, address = None, sock = None, chunk_size=512):        
-        self.logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
-        self.data_to_write = ''
+        self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))
+        self._data_to_write = ''
         self.received_data = ''
         self.reactor = reactor
         self.chunk_size = chunk_size
@@ -139,7 +139,7 @@ class ConnectionHandler(asyncore.dispatcher):
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.logger.debug('connecting to %s', address)
+            self._logger.debug('connecting to %s', address)
             self.connect(address)
         elif sock:            
             asyncore.dispatcher.__init__(self, sock=sock)
@@ -149,16 +149,16 @@ class ConnectionHandler(asyncore.dispatcher):
         return
         
     def write(self, data):
-        self.data_to_write += data
+        self._data_to_write += data
         return
             
     def writable(self):        
-        response = bool(self.data_to_write)
-        self.logger.debug('writable() -> %s', response)
+        response = bool(self._data_to_write)
+        self._logger.debug('writable() -> %s', response)
         return response
         
     def handle_close(self):
-        self.logger.debug('handle_close()')        
+        self._logger.debug('handle_close()')        
         self.close()
         self.context.on_close()       
         return
@@ -172,10 +172,10 @@ class ConnectionHandler(asyncore.dispatcher):
         """
             Write as much as possible
         """        
-        self.logger.debug('handle_write()')
-        sent = self.send(self.data_to_write)        
-        self.data_to_write = self.data_to_write[sent:]
+        self._logger.debug('handle_write()')
+        sent = self.send(self._data_to_write)        
+        self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write
-        if self.close_after_last_write and not bool(self.data_to_write):
+        if self.close_after_last_write and not bool(self._data_to_write):
             self.handle_close()
         return

@@ -122,7 +122,7 @@ class LogOutputPipeDispatcher(OutputPipeDispatcher):
 
     def handle_read(self):
         OutputPipeDispatcher.handle_read(self)
-        if self._terminator in self._received_data:
+        while self._terminator in self._received_data:
             idx = self._received_data.find(self._terminator)
             self.handle_log(self._received_data[:idx])
             self._received_data = self._received_data[idx+self._len_t:]

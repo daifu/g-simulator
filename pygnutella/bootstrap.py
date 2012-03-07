@@ -61,7 +61,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
+        print self.socket.getpeername(), ' -> ', self._bootstrap.addr, self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -110,7 +110,7 @@ class BootstrapOutHandler(asynchat.async_chat):
         args = tokens[1:]
         if method  == BootstrapMethod.PEER:
             ip, port = args
-            address = (ip, port)
+            address = (ip, int(port))
             self.peer_list.append(address)
             if self._servent:
                 self._servent.on_bootstrap(address)            

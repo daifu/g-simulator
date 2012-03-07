@@ -8,7 +8,6 @@ def setup_func():
     assert_equal(servent.files, [])
 
 @with_setup(setup_func)
-
 def test_check_file():    
     servent.set_files([FileInfo(1,"first file", 600),  FileInfo(2,"second file", 2500) , FileInfo(3, "third file", 5000)])
     assert_equal(servent.check_file(1), True)

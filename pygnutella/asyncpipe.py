@@ -72,7 +72,7 @@ class InputPipeDispatcher(PipeDispatcher):
         self._data_to_write += data
     
     def handle_write(self):
-        # writable as muchas possible
+        # writable as much as possible
         sent = self.send(self._data_to_write)
         self._data_to_write = self._data_to_write[sent:]
         if not bool(self._data_to_write) and self._close_when_done:

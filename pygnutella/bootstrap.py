@@ -1,6 +1,6 @@
-import asyncore, asynchat, socket
-from multiprocessing import Process
-from scheduler import loop as scheduler_loop, close_all
+import asyncore
+import asynchat
+import socket
 
 class SimpleBootstrap(asyncore.dispatcher):
     nodes = []
@@ -11,7 +11,8 @@ class SimpleBootstrap(asyncore.dispatcher):
         # bind socket to a public ip (not localhost or 127.0.0.1)
         self.bind((socket.gethostname(), port))
         # get socket address for future use
-        self.address = self.socket.getsockname()        
+        self.addr = self.socket.getsockname()
+        print "Bootstrap address: %s %s" % (self.addr)        
         # listening for incoming connection
         self.listen(5)        
         return
@@ -60,7 +61,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        #print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
+        print self.socket.getpeername(), ' -> ', self._bootstrap.address, self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -103,60 +104,19 @@ class BootstrapOutHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        #print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
+        print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
         if method  == BootstrapMethod.PEER:
             ip, port = args
-            self.peer_list.append((ip, port))
+            address = (ip, port)
+            self.peer_list.append(address)
+            if self._servent:
+                self._servent.on_bootstrap(address)            
         elif method == BootstrapMethod.CLOSE:
             self.handle_close()
         else:
             raise ValueError
         # clean the buffer
-        self._received_data = ''
-    
-    def handle_close(self):
-        if self._servent:
-            self._servent.on_bootstrap(self.peer_list)
-        asynchat.async_chat.handle_close(self)
-
-def _create_gnutella_node(servent_class, bootstrap_address, files = []):
-    servent_class(files = files, bootstrap_address = bootstrap_address)
-    try:
-        scheduler_loop()
-    finally:
-        close_all()
-
-def _create_bootstrap_node(bootstrap):
-    # run scheduler loop for bootstrap node
-    try:
-        scheduler_loop()
-    finally:
-        close_all()
-    
-
-def create_gnutella_network(preferred, bootstrap_cls = SimpleBootstrap):   
-    processes = []
-    # start up bootstrap node
-    bootstrap_node = bootstrap_cls()
-    address = bootstrap_node.address
-    p = Process(target = _create_bootstrap_node, args = (bootstrap_node,))
-    p.start()
-    processes.append(p)
-    
-    # create servent process and pass in prefered servent_class, bootstrap address
-    # TODO: add an extra parameter to pass in file list    
-    for servent_cls in preferred:
-        p = Process(target = _create_gnutella_node, args=(servent_cls, address))
-        p.start()
-        processes.append(p)
-
-    # run scheduler loop for bootstrap node
-    try:
-        for process in processes:
-            process.join()
-    finally:
-        for process in processes:
-            process.terminate()
+        self._received_data = ''    

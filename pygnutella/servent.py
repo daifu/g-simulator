@@ -23,7 +23,7 @@ class Servent:
         self.forwarding_table = {}        
         # create servent id
         self.id = uuid.uuid4().bytes
-        self.log("my id is %s", self.id.encode('hex_codec'))
+        self.log("my id is %s" % self.id.encode('hex_codec'))
         # calculate number of file and number of kilobyte shared
         self._files = files
         self.num_files = len(files)

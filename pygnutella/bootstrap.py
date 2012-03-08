@@ -1,20 +1,22 @@
 import asyncore
 import asynchat
 import socket
+import logging
 
 class SimpleBootstrap(asyncore.dispatcher):
     nodes = []
     
     def __init__(self, port = 0):
+        self.logger = logging.getLogger("Bootstrap") 
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind socket to a public ip (not localhost or 127.0.0.1)
         self.bind((socket.gethostname(), port))
         # get socket address for future use
         self.addr = self.socket.getsockname()
-        print "Bootstrap address: %s %s" % (self.addr)        
+        self.logger.info("address at %s %s" % (self.addr))        
         # listening for incoming connection
-        self.listen(5)        
+        self.listen(5)
         return
     
     def handle_accept(self):
@@ -61,7 +63,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        print self.socket.getpeername(), ' -> ', self._bootstrap.addr, self._received_data
+        self._bootstrap.logger.info("receive %s", self._received_data)
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]
@@ -71,6 +73,7 @@ class BootstrapInHandler(asynchat.async_chat):
         elif method == BootstrapMethod.GET:
             potential_partners = self._bootstrap.get_node()
             for partner in potential_partners:
+                self._bootstrap.logger.info("sent %s %s" % partner)
                 self.push('PEER %s %s\n' % partner)            
             self.push("%s\n" % BootstrapMethod.CLOSE)
             self.close_when_done()
@@ -104,7 +107,6 @@ class BootstrapOutHandler(asynchat.async_chat):
         self.process_message()
     
     def process_message(self):
-        print self.socket.getpeername(), ' -> ', self.socket.getsockname() , self._received_data
         tokens = self._received_data.split()
         method = tokens[0]
         args = tokens[1:]

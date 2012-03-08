@@ -37,7 +37,7 @@ def main(args):
     node_type = args[0].lower()
     if node_type == 'bootstrap':        
         dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
-        bootstrap_node = AdvanceBootstrap(dag)
+        AdvanceBootstrap(dag)
     elif node_type == 'servent':
         ip = args[1]
         port = int(args[2])

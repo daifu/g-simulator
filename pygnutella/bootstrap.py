@@ -120,3 +120,36 @@ class BootstrapOutHandler(asynchat.async_chat):
             raise ValueError
         # clean the buffer
         self._received_data = ''    
+        
+class DagBootstrap(SimpleBootstrap):
+    """
+    This is DAG (directly asyclic graph) bootstrap
+    """
+    def __init__(self, dag=[]):
+        SimpleBootstrap.__init__(self)
+        # first node is zero
+        self._counter = 0
+        # this is DAG graph represent in adjacent list dictionary
+        # example:
+        # dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
+        # node 0 -> empty, because first node always zero
+        # node 1 -> node 0
+        # node 2 -> node 0, also could include node 1 too
+        # node 3 -> node 1, node 2
+        self._dag = dag
+    def get_node(self):
+        ret = []
+        try:
+            adj_list = self._dag[self._counter]
+            for node_index in adj_list:
+                try:
+                    ret.append(self.nodes[node_index])
+                except IndexError:
+                    pass
+        except KeyError:
+            # if there is no node, return the last connect node
+            # the default behavior
+            return SimpleBootstrap.get_node(self)
+        # increase node index
+        self._counter += 1
+        return ret

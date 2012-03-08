@@ -11,6 +11,7 @@ class HandShake:
 class HandShakeCompleteContext(IContext):
     def __init__(self, handler, data=None):
         IContext.__init__(self, handler, data)
+        self.handler.reactor.servent.log("handshake completed")
         self.handler.reactor.add_channel(handler)
         self.handler.reactor.servent.on_connect(handler)        
         self.on_read()       

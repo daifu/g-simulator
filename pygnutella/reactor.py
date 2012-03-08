@@ -116,14 +116,14 @@ class ServerHandler(asyncore.dispatcher):
         self.reactor.address = self.socket.getsockname()
         self.reactor.ip = utils.dotted_quad_to_num(self.reactor.address[0])
         self.reactor.port = self.reactor.address[1]        
-        self.reactor.servent.log('ServerHandler binding to %s %s' % self.reactor.address)
+        self.reactor.servent.log('bind to %s %s' % self.reactor.address)
         # listening for incoming connection
         self.listen(5)
         return
     
     def handle_accept(self):
-        sock, address = self.accept()
-        self.reactor.servent.log('handle_accept() -> %s %s' % address)
+        sock, _ = self.accept()
+        self.reactor.servent.log('connection established')
         ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
         return
     

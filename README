@@ -1,3 +1,12 @@
+Demo
+=======================
+
+First start up bootstrap node
+> python run_bootstrap.py
+
+Second run servent nodes. 
+> python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
+
 Check required packages
 =======================
 

@@ -171,7 +171,6 @@ class ConnectionHandler(asyncore.dispatcher):
             
     def writable(self):        
         response = bool(self._data_to_write)
-        self.reactor.servent.log('writable() -> %s', response)
         return response
         
     def handle_close(self):
@@ -188,8 +187,7 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_write(self):
         """
             Write as much as possible
-        """        
-        self.reactor.servent.log('handle_write()')
+        """
         sent = self.send(self._data_to_write)        
         self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write

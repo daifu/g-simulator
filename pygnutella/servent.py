@@ -80,16 +80,17 @@ class BasicServent:
                 # forward query packet to neighbor servent
                 self.flood(connection_handler, message)
         elif message.payload_descriptor == GnutellaBodyId.QUERYHIT:
-            # add to forwarding table to forward PUSH
-            self.forwarding_table[(message.message_id, message.body.servent_id, GnutellaBodyId.PUSH)] = connection_handler
-            # forwarding query hit
-            self.forward(message)
-        elif message.payload_descriptor == GnutellaBodyId.PUSH:
-            if message.body.servent_id == self.id:
-                pass
-            else:
-                # forward push
+            # don't route query hit if it is meant for this node            
+            if not message.body.servent_id == self.id:
+                # add to forwarding table to forward PUSH
+                self.forwarding_table[(message.message_id, message.body.servent_id, GnutellaBodyId.PUSH)] = connection_handler
+                # forwarding query hit
                 self.forward(message)
+        elif message.payload_descriptor == GnutellaBodyId.PUSH:
+            # don't route push if it is meant for this node
+            if not message.body.servent_id == self.id:
+                # forward push
+                self.forward(message)                
         else:
             raise ValueError
             

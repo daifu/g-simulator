@@ -21,9 +21,9 @@ from pygnutella.scheduler import loop as scheduler_loop, close_all
 
 if __name__ == '__main__':
     bootstrap_node = SimpleBootstrap()
-    node1 = BootstrapOutHandler(('127.0.1.1', 3435), bootstrap_node.address)
-    node2 = BootstrapOutHandler(('127.0.1.1', 15025), bootstrap_node.address)
-    node3 = BootstrapOutHandler(('127.0.1.1', 1252), bootstrap_node.address)
+    node1 = BootstrapOutHandler(('127.0.1.1', 3435), bootstrap_node.addr)
+    node2 = BootstrapOutHandler(('127.0.1.1', 15025), bootstrap_node.addr)
+    node3 = BootstrapOutHandler(('127.0.1.1', 1252), bootstrap_node.addr)
     try:
         scheduler_loop(count=5)
     finally:

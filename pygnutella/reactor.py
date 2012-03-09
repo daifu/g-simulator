@@ -151,11 +151,9 @@ class ConnectionHandler(asyncore.dispatcher):
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.reactor.servent.log('connecting to %s %s' % address)
-            self.address = address
             self.connect(address)
         elif sock:            
             asyncore.dispatcher.__init__(self, sock=sock)
-            self.address = self.socket.getpeername()
         else:
             raise ValueError
         return

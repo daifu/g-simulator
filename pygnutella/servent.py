@@ -56,8 +56,7 @@ class BasicServent:
         """ 
         on event of receiving a message from an existing connection 
         """
-        self.log('Receive message from %s', connection_handler.addr)
-
+        self.log("received %s", message)
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
             if (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                 
@@ -126,7 +125,7 @@ class BasicServent:
         """
         Forward message to correct servent in according to forwarding table
         """
-        if message.get_ttl() < 2:
+        if message.ttl < 2:
             return        
         try:
             message.decrease_ttl()
@@ -143,7 +142,7 @@ class BasicServent:
         """
         Flood message to every directly connected servent
         """
-        if message.get_ttl() < 2:
+        if message.ttl < 2:
             return
         message.decrease_ttl()
         self.reactor.broadcast_except_for(connection_handler, message)
@@ -199,7 +198,7 @@ class RandomWalkServent(BasicServent):
     This servent when flood, send with probability 0.5
     """
     def flood(self, connection_handler, message):
-        if message.get_ttl() < 2:
+        if message.ttl < 2:
             return
         message.decrease_ttl()
         packet = message.serialize()

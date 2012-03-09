@@ -66,7 +66,7 @@ class Message:
         return self.payload_length + self.HEADER_LENGTH
     
     def __repr__(self):        
-        return "<Message: %s %s %s %s>" % (self.message_id, GnutellaBodyId.get_str_id(self.payload_descriptor), self.ttl, self.hops)
+        return "<Message: %s %s %s %s>" % (self.message_id.encode('hex_codec'), GnutellaBodyId.get_str_id(self.payload_descriptor), self.ttl, self.hops)
         
 def create_message(message_type, message_id = None, ttl = 7, **kwargs):
     message = Message(message_id, ttl)

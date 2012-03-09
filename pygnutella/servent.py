@@ -56,7 +56,7 @@ class BasicServent:
         """ 
         on event of receiving a message from an existing connection 
         """
-        self.log('Receive message from %s', connection_handler.socket.getsockname())
+        self.log('Receive message from %s', connection_handler.addr)
 
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process

@@ -48,7 +48,6 @@ class Reactor:
         return
         
     def broadcast_except_for(self, handler, message):
-        self.log("broadcast_except_for() -> %s", message.serialize())
         packet = message.serialize()
         for connection_handler in self.channels:
             if not connection_handler == handler:
@@ -162,8 +161,9 @@ class ConnectionHandler(asyncore.dispatcher):
         self._data_to_write += data
         return
             
-    def writable(self):        
+    def writable(self):            
         response = bool(self._data_to_write)
+        #self.reactor.servent.log("writable() -> %s", response)
         return response
         
     def handle_close(self):
@@ -180,11 +180,13 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_write(self):
         """
             Write as much as possible
-        """
-        sent = self.send(self._data_to_write)        
+        """        
+        sent = self.send(self._data_to_write)
+        self.reactor.servent.log("handle_write() -> to: %s buffer: %d sent: %d", self.socket.getpeername(), len(self._data_to_write), sent)        
         self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write
         if self._close_when_done and not bool(self._data_to_write):
+            self.reactor.servent.log("close_when_done()")
             self.handle_close()
         return
     

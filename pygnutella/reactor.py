@@ -155,6 +155,7 @@ class ConnectionHandler(asyncore.dispatcher):
             asyncore.dispatcher.__init__(self, sock=sock)
         else:
             raise ValueError
+        self.connected = True
         return
         
     def write(self, data):
@@ -162,12 +163,13 @@ class ConnectionHandler(asyncore.dispatcher):
         return
             
     def writable(self):            
-        response = bool(self._data_to_write)
-        #self.reactor.servent.log("writable() -> %s", response)
+        response = bool(self._data_to_write) and self.connected
+        self.reactor.servent.log("writable() -> %s", response)
         return response
         
     def handle_close(self):
-        self.reactor.servent.log('handle_close()')        
+        self.reactor.servent.log('handle_close()')
+        self.connected = False        
         self.close()
         self.context.on_close()       
         return
@@ -180,7 +182,7 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_write(self):
         """
             Write as much as possible
-        """        
+        """
         sent = self.send(self._data_to_write)
         self.reactor.servent.log("handle_write() -> to: %s buffer: %d sent: %d", self.socket.getpeername(), len(self._data_to_write), sent)        
         self._data_to_write = self._data_to_write[sent:]

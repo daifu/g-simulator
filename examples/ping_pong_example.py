@@ -14,18 +14,13 @@ class SendServent(BasicServent):
         self.log("sending %s", ping_message)
         self.log("ping size %s", len(ping_message.serialize()))
         connection_handler.write(ping_message.serialize())
-        connection_handler.write(create_message(GnutellaBodyId.PING).serialize())
-        connection_handler.write(create_message(GnutellaBodyId.PING).serialize())
         return
     
     def on_receive(self, connection_handler, message):
         self.log("received %s", message)
         self.receive_message.append(message)
         BasicServent.on_receive(self, connection_handler, message)
-    
-    def readable(self):
-        self.log("readable()")
-        return True
+
 
 class ReceiveServent(BasicServent):
     receive_message = []
@@ -33,9 +28,6 @@ class ReceiveServent(BasicServent):
         self.receive_message.append(message)
         BasicServent.on_receive(self, connection_handler, message)
 
-    def readable(self):
-        self.log("readable()")
-        return True
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s') 
@@ -47,6 +39,6 @@ if __name__ == '__main__':
     receive_servent.reactor.gnutella_connect(send_servent.reactor.address)
     
     try:
-        asyncore.loop()
-    finally:        
+        asyncore.loop(use_poll = True)
+    finally:
         asyncore.close_all()

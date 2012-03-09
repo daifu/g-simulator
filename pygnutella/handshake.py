@@ -19,11 +19,15 @@ class HandShakeCompleteContext(IContext):
     
     def on_read(self):
         try:
-            msg = Message()
-            msg_length = msg.deserialize(self.handler.received_data)
-            if msg_length:
-                self.handler.received_data = self.handler.received_data[msg_length:]
-                self.handler.reactor.servent.on_receive(self.handler, msg)                
+            while True:
+                msg = Message()
+                msg_length = msg.deserialize(self.handler.received_data)
+                if msg_length:
+                    self.handler.received_data = self.handler.received_data[msg_length:]
+                    self.handler.reactor.servent.on_receive(self.handler, msg)
+                else:                    
+                    self.handler.reactor.servent.log("mesage incomplete")
+                    break
         except ValueError:
             # The message stream is messed up
             self.handler.reactor.servent.log("Mesage stream is messed up")

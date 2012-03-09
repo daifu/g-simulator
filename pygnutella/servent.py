@@ -1,7 +1,7 @@
 import logging, random, uuid
 from reactor import Reactor
-from messagebody import GnutellaBodyId, PongBody
-from message import Message
+from messagebody import GnutellaBodyId
+from message import create_message
 
 # struct of file, each servent have an array/list of these files
 class FileInfo:
@@ -66,8 +66,13 @@ class BasicServent:
                 # add ping to forwarding table to forward PONG
                 self.forwarding_table[(message.message_id, GnutellaBodyId.PONG)] = connection_handler
                 # reply with Pong (the return trip's ttl should be equals to hops)
-                pong_message = Message(message.message_id, message.hops, 0)              
-                PongBody(pong_message, self.reactor.ip, self.reactor.port, self.num_files, self.num_kilobytes)
+                pong_message = create_message(GnutellaBodyId.PONG, 
+                                              message.message_id, 
+                                              message.hops,
+                                              ip = self.reactor.ip,
+                                              port = self.reactor.port,
+                                              num_of_files = self.num_files,
+                                              num_of_kb = self.num_kilobytes)
                 connection_handler.write(pong_message.serialize())
         elif message._payload_descriptor == GnutellaBodyId.PONG:
             # forwarding pong                 
@@ -92,7 +97,7 @@ class BasicServent:
                 # forward push
                 self.forward(message)                
         else:
-            raise ValueError
+            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
             
     def on_disconnect(self, connection_handler):
         """ 

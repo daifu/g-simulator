@@ -22,7 +22,7 @@ class Message:
             
     def decrease_ttl(self, value=1):
         self.ttl = self.ttl - value
-        self.hop = self.hop + value
+        self.hops = self.hops + value
     
     def serialize(self):
         assert self.body != None
@@ -65,6 +65,9 @@ class Message:
             raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
         return self.payload_length + self.HEADER_LENGTH
     
+    def __repr__(self):        
+        return "<Message: %s %s %s %s>" % (self.message_id, GnutellaBodyId.get_str_id(self.payload_descriptor), self.ttl, self.hops)
+        
 def create_message(message_type, message_id = None, ttl = 7, **kwargs):
     message = Message(message_id, ttl)
     if message_type == GnutellaBodyId.PING:

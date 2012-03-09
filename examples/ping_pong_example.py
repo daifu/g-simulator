@@ -12,12 +12,10 @@ class SendServent(BasicServent):
         ping_message = create_message(GnutellaBodyId.PING)
         self.sent_message.append(ping_message)
         self.log("sending %s", ping_message)
-        self.log("ping size %s", len(ping_message.serialize()))
         connection_handler.write(ping_message.serialize())
         return
     
     def on_receive(self, connection_handler, message):
-        self.log("received %s", message)
         self.receive_message.append(message)
         BasicServent.on_receive(self, connection_handler, message)
 
@@ -31,7 +29,7 @@ class ReceiveServent(BasicServent):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s') 
-    receive_servent = ReceiveServent()
+    receive_servent = SendServent()
     send_servent = SendServent()
     
     # manually set file
@@ -39,6 +37,6 @@ if __name__ == '__main__':
     receive_servent.reactor.gnutella_connect(send_servent.reactor.address)
     
     try:
-        asyncore.loop(use_poll = True)
+        asyncore.loop()
     finally:
         asyncore.close_all()

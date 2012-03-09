@@ -16,7 +16,7 @@ class FileInfo:
         self.file_name = file_name
         self.file_size = file_size
    
-class Servent:
+class BasicServent:
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger(self.__class__.__name__ +" "+ str(id(self)))        
         # forwarding table: (message_id, payload_type) -> connection_handler
@@ -188,7 +188,7 @@ class Servent:
         return match
     
     
-class RandomWalkServent(Servent):
+class RandomWalkServent(BasicServent):
     """
     This servent when flood, send with probability 0.5
     """
@@ -202,7 +202,7 @@ class RandomWalkServent(Servent):
                 if random.randint(0, 10) & 1:
                     handler.write(packet)
 
-class SilentServent(Servent):
+class SilentServent(BasicServent):
     def log(self, msg, *args, **kwargs):
         # Do nothing i.e. silent the output
         pass

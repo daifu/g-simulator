@@ -59,7 +59,7 @@ class BasicServent:
         self.log("received %s", message)
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
-            if (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                 
+            if (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                                 
                 # send Ping to any neighbor that not the one servent recceived the Ping from
                 self.flood(connection_handler, message)
                 # add ping to forwarding table to forward PONG
@@ -72,6 +72,7 @@ class BasicServent:
                                               port = self.reactor.port,
                                               num_of_files = self.num_files,
                                               num_of_kb = self.num_kilobytes)
+                self.log("sending %s", pong_message)
                 connection_handler.write(pong_message.serialize())
         elif message._payload_descriptor == GnutellaBodyId.PONG:
             # forwarding pong                 

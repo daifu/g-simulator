@@ -6,6 +6,21 @@ class GnutellaBodyId:
     QUERY = 0x80
     QUERYHIT = 0x81
     PUSH = 0x40
+    @staticmethod
+    def get_str_id(body_id):
+        if body_id == GnutellaBodyId.PING:
+            return "ping"
+        elif body_id == GnutellaBodyId.PONG:
+            return "pong"
+        elif body_id == GnutellaBodyId.QUERY:
+            return "query"
+        elif body_id == GnutellaBodyId.QUERYHIT:
+            return "queryhit"
+        elif body_id == GnutellaBodyId.PUSH:
+            return "push"
+        else:
+            return "<not recognize>"
+        
 
 class IMessageBody:
     """

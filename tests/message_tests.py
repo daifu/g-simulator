@@ -1,17 +1,22 @@
 from nose.tools import *
-from pygnutella.message import Message
-from pygnutella.messagebody import PingBody
+from pygnutella.message import Message, create_message
+from pygnutella.messagebody import PingBody, GnutellaBodyId
 
 def test_message():
     # Test the default init
-    msg = Message(message_id = '')    
+    msg = Message()    
     assert_equal(msg.ttl, 7)
     assert_equal(msg.hops, 0)
-    assert_equal(msg.payload_length, None)
-    assert_equal(msg.payload_descriptor, None)
-    assert_not_equals(msg.message_id, None)
+    assert_equal(msg.payload_descriptor, None)    
     PingBody(msg)
     
+    # test short cut
+    msg = create_message(GnutellaBodyId.PING)
+    assert_equal(msg.ttl, 7)
+    assert_equal(msg.hops, 0)
+    assert_equal(msg.payload_descriptor, GnutellaBodyId.PING)
+
+        
     # test serialization
     expected_message = msg.message_id + '\x00\x07\x00\x00\x00\x00\x00'
     ser = msg.serialize()
@@ -23,4 +28,4 @@ def test_message():
     assert_equal(msg.ttl, 7)
     assert_equal(msg.hops, 0)
     assert_equal(msg.payload_length, 0)
-    assert_equal(msg.payload_descriptor, 0)    
+    assert_equal(msg.payload_descriptor, 0)  

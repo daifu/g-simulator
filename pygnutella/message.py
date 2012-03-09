@@ -6,14 +6,14 @@ class Message:
     # count in byte
     MAXIMUM_SUM_TTL_HOPS = 7
     
-    def __init__(self, message_id = None, ttl = 7, hops = 0):
+    def __init__(self, message_id = None, ttl = 7):
         if message_id:
             self.message_id = message_id
         else:
             # automatically generate one
             self.message_id = uuid.uuid4().bytes
         self.ttl = ttl
-        self.hops = hops
+        self.hops = 0
         self.body = None
         self.payload_length = None
         self.payload_descriptor = None
@@ -62,5 +62,28 @@ class Message:
             self.body = QueryHitBody(self)
         # final check if deserialize correctly with payload_length given in the header                              
         if self.body.deserialize(raw_data[:self.payload_length]):
-            raise ValueError
+            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
         return self.payload_length + self.HEADER_LENGTH
+    
+def create_message(message_type, message_id = None, ttl = 7, **kwargs):
+    message = Message(message_id, ttl)
+    if message_type == GnutellaBodyId.PING:
+        PingBody(message)
+    elif message_type == GnutellaBodyId.PONG:
+        PongBody(message, kwargs['ip'], kwargs['port'], kwargs['num_of_files'], kwargs['num_of_kb'])
+    elif message_type == GnutellaBodyId.PUSH:
+        PushBody(message, kwargs['servent_id'], kwargs['ip'], kwargs['port'], kwargs['file_index'])
+    elif message_type == GnutellaBodyId.QUERY:
+        QueryBody(message, kwargs['min_speed'], kwargs['search_criteria'])
+    elif message_type == GnutellaBodyId.QUERYHIT:
+        QueryHitBody(message, 
+                     kwargs['num_of_hits'], 
+                     kwargs['ip'], 
+                     kwargs['port'], 
+                     kwargs['speed'], 
+                     kwargs['result_set'], 
+                     kwargs['servent_id'])
+    else:
+        raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
+    
+    return message

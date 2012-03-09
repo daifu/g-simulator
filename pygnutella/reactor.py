@@ -3,8 +3,6 @@ import socket
 import utils
 from handshake import HandShakeOutContext, DownloadOutContext, ProbeContext
 from bootstrap import BootstrapOutHandler
-from traceback import print_exc
-from sys import stderr
 
 class Reactor:
     """
@@ -71,8 +69,7 @@ class Reactor:
         self.servent.log("gnutella_connect() -> %s %s" % address)
         try:
             ConnectionHandler(reactor = self, context_class = HandShakeOutContext, address = address)
-        except:
-            print_exc(file=stderr)
+        except socket.error:
             self.servent.log("failed to connect")
             return False 
         return True
@@ -84,8 +81,7 @@ class Reactor:
                               context_class = DownloadOutContext, 
                               context_data = (remote_file_index, remote_file_name, local_file_name), 
                               address = address)
-        except:
-            print_exc(file=stderr)
+        except socket.error:
             self.servent.log("failed to connect")
             return False 
         return True
@@ -96,8 +92,7 @@ class Reactor:
             self.bootstrap_handler = BootstrapOutHandler(node_address = self.address, 
                                                          bootstrap_address = address, 
                                                          servent = self.servent)
-        except:
-            print_exc(file=stderr)
+        except socket.error:
             self.servent.log("failed to connect")
             return False
         return True

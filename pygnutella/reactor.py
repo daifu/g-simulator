@@ -110,13 +110,6 @@ class GnutellaServer(asyncore.dispatcher):
 class ConnectionHandler(asyncore.dispatcher):
     """
         This is the handler for connection either incoming or outgoing.
-        
-        If outgoing, user simply creates handler and call
-        handler.create_socket(address)
-        
-        If incoming, user simply create handler and call
-        sock.setblocking(0)
-        handler.set_socket(sock = sock)
     """    
     def __init__(self, reactor, context_class, 
                  context_data = None, address = None, sock = None, 

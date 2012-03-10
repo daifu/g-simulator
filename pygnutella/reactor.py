@@ -242,8 +242,7 @@ class ServerHandler(ConnectionHandler):
                 if msg_length:
                     self.received_data = self.received_data[msg_length:]
                     self.reactor.servent.on_receive(self, msg)
-                else:                    
-                    self.reactor.servent.log("decoding -> message incomplete")
+                else:
                     break
         except ValueError:
             # The message stream is messed up
@@ -328,8 +327,7 @@ class GnutellaClientHandler(ConnectionHandler):
                 if msg_length:
                     self.received_data = self.received_data[msg_length:]
                     self.reactor.servent.on_receive(self, msg)
-                else:                    
-                    self.reactor.servent.log("decoding -> message incomplete")
+                else:
                     break
         except ValueError:
             # The message stream is messed up

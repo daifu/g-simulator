@@ -1,7 +1,6 @@
 import asyncore
 import socket
 import utils
-from handshake import HandShakeOutContext, DownloadOutContext, ProbeContext
 from bootstrap import BootstrapOutHandler
 
 class Reactor:
@@ -48,19 +47,19 @@ class Reactor:
     def gnutella_connect(self, address):
         self.servent.log("gnutella_connect() -> %s %s" % address)
         try:
-            ConnectionHandler(reactor = self, context_class = HandShakeOutContext, address = address)
+            GnutellaClientHandler(self, address)
         except socket.error:
             self.servent.log("failed to connect")
             return False 
         return True
     
     def download_connect(self, address, remote_file_index, remote_file_name, local_file_name):
-        self.servent.log("gnutella_connect() -> %s %s" % address)
+        self.servent.log("download_connect() -> %s %s" % address)
         try:
-            ConnectionHandler(reactor = self, 
-                              context_class = DownloadOutContext, 
-                              context_data = (remote_file_index, remote_file_name, local_file_name), 
-                              address = address)
+            DownloadClientHandler(self, 
+                                  remote_file_index, 
+                                  remote_file_name, 
+                                  local_file_name, address)
         except socket.error:
             self.servent.log("failed to connect")
             return False 
@@ -99,7 +98,7 @@ class GnutellaServer(asyncore.dispatcher):
     def handle_accept(self):
         sock, _ = self.accept()
         self.reactor.servent.log('tcp connection established')
-        ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
+        ServerHandler(self.reactor, sock=sock)
         return
     
     def handle_close(self):
@@ -109,43 +108,26 @@ class GnutellaServer(asyncore.dispatcher):
     
 class ConnectionHandler(asyncore.dispatcher):
     """
-        This is the handler for connection either incoming or outgoing.
+        This is a generic handler for connection either incoming or outgoing.
+        
+        Derive this class hook process_read()
     """    
-    def __init__(self, reactor, context_class, 
-                 context_data = None, address = None, sock = None, 
-                 chunk_size=512, close_when_done = False):        
+    def __init__(self, reactor, chunk_size=512, close_when_done = False):        
         self._data_to_write = ''
         self.received_data = ''
+        self.process_read = None
         self.reactor = reactor
         self.chunk_size = chunk_size
         self._close_when_done = close_when_done
-        self._context = None
-        context_class(self, context_data)        
-        if address:           
-            asyncore.dispatcher.__init__(self)
-            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.reactor.servent.log('connecting to %s %s' % address)
-            self.connect(address)
-        elif sock:            
-            asyncore.dispatcher.__init__(self, sock=sock)
-        else:
-            raise ValueError
-        self.connected = True
+        asyncore.dispatcher.__init__(self)
         return
         
     def write(self, data):
         self._data_to_write += data
         return
-    
-    def get_context(self):
-        return self._context
-    
-    def set_context(self, context):
-        del self._context
-        self._context = context
                 
     def writable(self):            
-        response = bool(self._data_to_write) and self.connected
+        response = bool(self._data_to_write)
         return response
         
     def handle_close(self):
@@ -157,7 +139,10 @@ class ConnectionHandler(asyncore.dispatcher):
     def handle_read(self):
         #self.reactor.servent.log("handle_read() -> %s", self._context)
         self.received_data += self.recv(self.chunk_size)
-        self._context.on_read()
+        if callable(self.process_read):
+            self.process_read()
+        else:
+            self.reactor.servent.log("process_read() is not callable")
         return
     
     def handle_write(self):
@@ -168,10 +153,64 @@ class ConnectionHandler(asyncore.dispatcher):
         #self.reactor.servent.log("handle_write() -> to: %s buffer: %d sent: %d", self.socket.getpeername(), len(self._data_to_write), sent)        
         self._data_to_write = self._data_to_write[sent:]
         # check flag: close_after_last_write
-        if self._close_when_done and not bool(self._data_to_write):
+        if self._close_when_done and not self.writable():
             self.reactor.servent.log("close_when_done()")
             self.handle_close()
         return
     
     def close_when_done(self):
         self._close_when_done = True
+
+class ServerHandler(ConnectionHandler):
+    def __init__(self, reactor, sock):
+        ConnectionHandler.__init__(self, reactor)
+        sock.setblocking(False)
+        self.set_socket(sock)
+        self.process_read = self._probe
+        
+    def _probe(self):
+        pass
+    
+    def _handshake(self):
+        pass
+            
+    def _download(self):
+        pass
+    
+    def _gnutella(self):
+        pass
+    
+    def handle_close(self):
+        ConnectionHandler.handle_close(self)
+    
+class GnutellaClientHandler(ConnectionHandler):
+    def __init__(self, reactor, address):
+        ConnectionHandler.__init__(self, reactor)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(address)
+        self.process_read = self._handshake
+        
+    def _handshake(self):
+        pass
+    
+    def _gnutella(self):
+        pass
+    
+    def handle_close(self):
+        ConnectionHandler.handle_close(self)    
+    
+class DownloadClientHandler(ConnectionHandler):
+    def __init__(self, reactor, address, remote_file_index, remote_file_name, local_file_name):
+        ConnectionHandler.__init__(self, reactor)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(address)
+        self.process_read = self._download
+        self._remote_file_index = remote_file_index
+        self._remote_file_name = remote_file_name
+        self._local_file_name = local_file_name
+        
+    def _download(self):
+        pass
+
+    def handle_close(self):
+        ConnectionHandler.handle_close(self)

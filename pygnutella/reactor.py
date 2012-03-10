@@ -282,8 +282,8 @@ class ServerHandler(ConnectionHandler):
                     self.reactor.servent.log("file not found and sending failed response")
                     self.handle_close()
             else:
-                self.handler.reactor.servent.on_download(DownloadEventId.BAD_REQUEST, self)
-                self.handler.handle_close()    
+                self.reactor.servent.on_download(DownloadEventId.BAD_REQUEST, self)
+                self.handle_close()    
     
     def handle_close(self):
         ConnectionHandler.handle_close(self)
@@ -340,8 +340,8 @@ class GnutellaClientHandler(ConnectionHandler):
         ConnectionHandler.handle_close(self)
         if self._handshake_complete:
             # clean up
-            self.reactor.servent.on_disconnect(self.handler)
-            self.reactor.remove_channel(self.handler)           
+            self.reactor.servent.on_disconnect(self)
+            self.reactor.remove_channel(self)           
 
    
 class DownloadClientHandler(ConnectionHandler):
@@ -403,15 +403,15 @@ class DownloadClientHandler(ConnectionHandler):
             # if we are at the end of the stream
             if self.num_bytes == self.max_bytes:
                 self.out_file.close()
-                self.handler.reactor.servent.on_download(DownloadEventId.DOWNLOAD_COMPLETE, self)
-                self.handler.handle_close()
+                self.reactor.servent.on_download(DownloadEventId.DOWNLOAD_COMPLETE, self)
+                self.handle_close()
 
     def handle_close(self):
         ConnectionHandler.handle_close(self)
         if self.out_file:
             self.out_file.close()
         if self.num_bytes == 0 and not self._got_response and self._sent_request:
-            self.reactor.servent.on_download(DownloadEventId.CONNECTION_REFUSE, self.handler)
+            self.reactor.servent.on_download(DownloadEventId.CONNECTION_REFUSE, self)
         elif self.num_bytes > 0 and self.num_bytes < self.max_bytes and self._got_response:
-            self.reactor.servent.on_download(DownloadEventId.DOWNLOAD_INCOMPLETE, self.handler)        
+            self.reactor.servent.on_download(DownloadEventId.DOWNLOAD_INCOMPLETE, self)        
         return

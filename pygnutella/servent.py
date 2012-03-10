@@ -103,7 +103,7 @@ class BasicServent:
         """ 
         servent behavior when leaving the network 
         """
-        self.log('disconnect from the network %s', connection_handler.socket.getsockname())
+        self.log('disconnected')
         # resource clean up
         # clean up forwarding table
         remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]

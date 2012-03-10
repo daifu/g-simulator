@@ -11,6 +11,7 @@ class IContext:
     """
     def __init__(self, handler, data=None):
         self.handler = handler
+        self.handler.set_context(self)
         return
     
     def on_read(self):

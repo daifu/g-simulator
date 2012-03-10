@@ -52,7 +52,7 @@ class HandShakeInContext(IContext):
                 if self.handler.reactor.servent.on_accept():
                     self.handler.write(HandShake.RESPONSE_MESSAGE)
                     self.handler.received_data = self.handler.received_data[size:]
-                    self.handler.context = HandShakeCompleteContext(self.handler)
+                    HandShakeCompleteContext(self.handler)
                 else:
                     self.handler.handle_close()
     
@@ -73,7 +73,7 @@ class HandShakeOutContext(IContext):
             if HandShake.RESPONSE_MESSAGE == self.handler.received_data[:size]:
                 self.handler.reactor.servent.log("received Response Message")
                 self.handler.received_data = self.handler.received_data[size:]
-                self.handler.context = HandShakeCompleteContext(self.handler)
+                HandShakeCompleteContext(self.handler)
             else:
                 self.handler.handle_close()
                 
@@ -89,9 +89,9 @@ class ProbeContext(IContext):
     def on_read(self):
         if len(self.handler.received_data) >= 3:
             if self.handler.received_data[:3] == "GET":
-                self.handler.context = DownloadInContext(self.handler)
+                DownloadInContext(self.handler)
             else:
-                self.handler.context = HandShakeInContext(self.handler)
+                HandShakeInContext(self.handler)
     
     def on_close(self):
         return

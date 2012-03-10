@@ -117,7 +117,7 @@ class ServerHandler(asyncore.dispatcher):
     
     def handle_accept(self):
         sock, _ = self.accept()
-        self.reactor.servent.log('connection established')
+        self.reactor.servent.log('tcp connection established')
         ConnectionHandler(reactor = self.reactor, context_class = ProbeContext, sock=sock)
         return
     
@@ -145,7 +145,8 @@ class ConnectionHandler(asyncore.dispatcher):
         self.reactor = reactor
         self.chunk_size = chunk_size
         self._close_when_done = close_when_done
-        self.context = context_class(self, context_data)        
+        self._context = None
+        context_class(self, context_data)        
         if address:           
             asyncore.dispatcher.__init__(self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -161,22 +162,28 @@ class ConnectionHandler(asyncore.dispatcher):
     def write(self, data):
         self._data_to_write += data
         return
-            
+    
+    def get_context(self):
+        return self._context
+    
+    def set_context(self, context):
+        del self._context
+        self._context = context
+                
     def writable(self):            
         response = bool(self._data_to_write) and self.connected
-        self.reactor.servent.log("writable() -> %s", response)
         return response
         
     def handle_close(self):
-        self.reactor.servent.log('handle_close()')
-        self.connected = False        
+        self.reactor.servent.log('handle_close()')       
         self.close()
-        self.context.on_close()       
+        self._context.on_close()       
         return
     
     def handle_read(self):
+        self.reactor.servent.log("handle_read() -> %s", self._context)
         self.received_data += self.recv(self.chunk_size)
-        self.context.on_read()
+        self._context.on_read()
         return
     
     def handle_write(self):

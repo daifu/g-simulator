@@ -5,8 +5,10 @@ from pygnutella.messagebody import GnutellaBodyId
 from pygnutella.scheduler import loop as scheduler_loop, close_all
 
 class SendServent(BasicServent):
-    receive_message = []
-    sent_message = []
+    def __init__(self):
+        self.receive_message = []
+        self.sent_message = []
+        BasicServent.__init__(self)
     
     def on_connect(self, connection_handler):
         ping_message = create_message(GnutellaBodyId.PING)
@@ -19,7 +21,10 @@ class SendServent(BasicServent):
         BasicServent.on_receive(self, connection_handler, message)
 
 class ReceiveServent(BasicServent):
-    receive_message = []
+    def __init__(self):
+        BasicServent.__init__(self)
+        self.receive_message = []
+           
     def on_receive(self, connection_handler, message):
         self.receive_message.append(message.copy())
         BasicServent.on_receive(self, connection_handler, message)

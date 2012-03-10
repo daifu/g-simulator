@@ -12,33 +12,14 @@ class Reactor:
         3 Steps to use the class:
         
         1. Initialization:
-        reactor = Reactor()
-        reactor.install_handlers(acceptor, connector, receiver, disconnector, error)
-        
-        Handlers API and associated event and explainations
-        + acceptor():
-            call during handshake to ask Servant if they want to accept a gnutella connection
-            sent during handshake. return True for accepting
-        + connector(connection_handler): 
-            call either after accepted an incoming connection or after successfully establish an outgoing connection i.e. 
-            performance handshake successfully
-        + receiver(connection_handler, message): 
-            call when you receive a message which is defined by message.deserialize()
-        + disconnector(connection_handler): 
-            call AFTER connection is closed
-        + downloader(event_id, connection_handler):
-            call when there is a problem with a download connection
-        
+        reactor = Reactor(servent)
+                        
         2. Event Loop:
-        reactor.run()
-        
-        3. Event occurs
-        inside a event handler, send a message to connection corresponding to peer_id
-        reactor.send(peer_id, message)
+        asyncore.loop()
         
         OR
-        reactor.make_outgoing_connection(address)
-        + address is a tuple of (addr, port)        
+        
+        scheduler.loop()        
     """
     
     def __init__(self, servent, port = 0):

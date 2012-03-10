@@ -26,9 +26,14 @@ class LogServent(BasicServent):
         BasicServent.on_bootstrap(self, peer_address)
         
     def forward(self, message):
-        self.log("forward() -> %s", message)
-        return BasicServent.forward(self, message)
+        self.log("attempt to forward() -> %s", message)
+        ret = BasicServent.forward(self, message)
+        if ret:
+            self.log("forwarded")
+        else:
+            self.log("didn't forward")
+        return ret
     
-    def flood(self, message):
+    def flood(self, connection_handler, message):
         self.log("flood() -> %s", message)
-        BasicServent.flood(self, message)
+        BasicServent.flood(self, connection_handler, message)

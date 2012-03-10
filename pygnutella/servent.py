@@ -23,7 +23,12 @@ class BasicServent:
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        
         # forwarding table: (message_id, payload_type) -> (connection_handler, timestamp)
-        self.forwarding_table = {}        
+        self.forwarding_table = {}
+        # flood/forward ignore table: message_id -> timestamp
+        # this table used to prevent loop in flood
+        # all message send out need to put their message_id and
+        # timestamp = time.time()+ttl*FIXED_EXPIRED_INTERVAL
+        self.ignore = {}
         # create servent id
         self.id = uuid.uuid4().bytes
         self.log("id is %s" % self.id.encode('hex_codec'))
@@ -61,7 +66,9 @@ class BasicServent:
         """
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
-            if (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table:                                 
+            not_in_forwarding_table = (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time()) 
+            if  not_in_forwarding_table and not_ignore_or_expire:                                 
                 # send Ping to any neighbor that not the one servent recceived the Ping from
                 self.flood(connection_handler, message)
                 # add ping to forwarding table to forward PONG
@@ -75,13 +82,15 @@ class BasicServent:
                                               num_of_files = self.num_files,
                                               num_of_kb = self.num_kilobytes)
                 self.log("in receive ping, sending %s", pong_message)
-                connection_handler.write(pong_message.serialize())
+                self.send_message(pong_message, connection_handler)
         elif message.payload_descriptor == GnutellaBodyId.PONG:
             # forwarding pong                 
             self.forward(message)
         elif message.payload_descriptor == GnutellaBodyId.QUERY:
             # check if we saw this query before. If not, then process
-            if (message.message_id, GnutellaBodyId.QUERYHIT) not in self.forwarding_table:
+            not_in_forwarding_table = (message.message_id, GnutellaBodyId.QUERYHIT) not in self.forwarding_table
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time())            
+            if not_in_forwarding_table and not_ignore_or_expire:
                 # add to forwarding table to forward QUERYHIT
                 self.put_into_forwarding_table(message, connection_handler)
                 # forward query packet to neighbor servent
@@ -122,6 +131,11 @@ class BasicServent:
     
     def log(self, msg, *args, **kwargs):
         self._logger.debug(msg, *args, **kwargs)
+    
+    def send_message(self, message, handler):
+        if message.payload_descriptor == GnutellaBodyId.QUERY or message.payload_descriptor == GnutellaBodyId.PING:
+            self.ignore[message.message_id] = time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl
+        handler.write(message.serialize())
     
     def put_into_forwarding_table(self, message, handler):
         message_id = copy.deepcopy(message.message_id)

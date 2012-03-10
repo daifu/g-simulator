@@ -6,11 +6,10 @@ import sys
 
 class ExampleServent(LogServent):
     def on_connect(self, connection_handler):
+        LogServent.on_connect(self, connection_handler)
         ping_message = create_message(GnutellaBodyId.PING)
         self.log("sending %s", ping_message)
-        connection_handler.write(ping_message.serialize())        
-        LogServent.on_connect(self, connection_handler)
-        
+        self.send_message(ping_message, connection_handler)               
         
 def usage():
     print "Please run with <bootstrap ip> <bootstrap port> <num of nodes>"

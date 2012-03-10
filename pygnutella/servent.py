@@ -19,7 +19,7 @@ class FileInfo:
 class BasicServent:
     # Fixed expire time interval on forwarding
     # in unit of second
-    FIXED_EXPIRED_INTERVAL = 2
+    FIXED_EXPIRED_INTERVAL = 5
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        
         # forwarding table: (message_id, payload_type) -> (connection_handler, timestamp)

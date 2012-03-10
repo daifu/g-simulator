@@ -26,7 +26,7 @@ class HandShakeCompleteContext(IContext):
                     self.handler.received_data = self.handler.received_data[msg_length:]
                     self.handler.reactor.servent.on_receive(self.handler, msg)
                 else:                    
-                    self.handler.reactor.servent.log("message incomplete")
+                    self.handler.reactor.servent.log("decoding -> message incomplete")
                     break
         except ValueError:
             # The message stream is messed up

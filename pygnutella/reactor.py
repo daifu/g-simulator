@@ -25,7 +25,7 @@ class Reactor:
     def __init__(self, servent, port = 0):
         self.servent = servent
         self.channels = []
-        self.server_handler = ServerHandler(reactor = self, port = port)        
+        self.server_handler = GnutellaServer(reactor = self, port = port)        
         return
         
     def broadcast_except_for(self, handler, message):
@@ -77,9 +77,9 @@ class Reactor:
             return False
         return True
 
-class ServerHandler(asyncore.dispatcher):
+class GnutellaServer(asyncore.dispatcher):
     """
-        This is the ServerHandler which is to handle incoming connections.        
+        This is the GnutellaServer which is to handle incoming connections.        
     """
     def __init__(self, reactor, port):       
         self.reactor = reactor

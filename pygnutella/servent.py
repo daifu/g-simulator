@@ -67,7 +67,7 @@ class BasicServent:
                 # reply with Pong (the return trip's ttl should be equals to hops)
                 pong_message = create_message(GnutellaBodyId.PONG, 
                                               message.message_id, 
-                                              message.hops,
+                                              message.hops+1,
                                               ip = self.reactor.ip,
                                               port = self.reactor.port,
                                               num_of_files = self.num_files,
@@ -129,6 +129,8 @@ class BasicServent:
         if message.ttl < 2:
             return        
         try:
+            # create a deep copy
+            message = message.copy()
             message.decrease_ttl()
             packet = message.serialize()
             if message.payload_descriptor != GnutellaBodyId.PUSH:
@@ -145,6 +147,8 @@ class BasicServent:
         """
         if message.ttl < 2:
             return
+        # create a deep copy
+        message = message.copy()        
         message.decrease_ttl()
         self.reactor.broadcast_except_for(connection_handler, message)
         return

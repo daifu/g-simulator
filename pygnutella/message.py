@@ -60,8 +60,8 @@ class Message:
             self.body = QueryBody(self)
         elif self.payload_descriptor == GnutellaBodyId.QUERYHIT:
             self.body = QueryHitBody(self)
-        # final check if deserialize correctly with payload_length given in the header                              
-        if self.body.deserialize(raw_data[:self.payload_length]):
+        # final check if deserialize correctly with payload_length given in the header
+        if self.body.deserialize(raw_data[:self.payload_length]) == None:
             raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
         return self.payload_length + self.HEADER_LENGTH
     

@@ -1,4 +1,4 @@
-import logging, random, uuid
+import logging, random, uuid, copy
 from reactor import Reactor
 from messagebody import GnutellaBodyId
 from message import create_message
@@ -130,7 +130,7 @@ class BasicServent:
             return        
         try:
             # create a deep copy
-            message = message.copy()
+            message = copy.deepcopy(message)
             message.decrease_ttl()
             packet = message.serialize()
             if message.payload_descriptor != GnutellaBodyId.PUSH:
@@ -148,7 +148,7 @@ class BasicServent:
         if message.ttl < 2:
             return
         # create a deep copy
-        message = message.copy()        
+        message = copy.deepcopy(message)        
         message.decrease_ttl()
         self.reactor.broadcast_except_for(connection_handler, message)
         return

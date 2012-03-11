@@ -30,11 +30,13 @@ class Reactor:
         return
         
     def broadcast_except_for(self, handler, message):
+        cnt = 0
         packet = message.serialize()
         for connection_handler in self.channels:
             if not connection_handler == handler:
+                cnt += 1
                 connection_handler.write(packet)
-        return
+        return cnt
     
     def add_channel(self, handler):     
         self.channels.append(handler)

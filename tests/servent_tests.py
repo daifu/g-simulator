@@ -30,6 +30,31 @@ class ReceiveServent(BasicServent):
         self.receive_message.append(deepcopy(message))
         BasicServent.on_receive(self, connection_handler, message)
 
+class TestHandler():
+    def write(self, data):
+        return
+
+def test_on_receive():
+    # test all logic path in on_receive(
+    basic_servent = BasicServent()
+    test_handler = TestHandler()
+    ping_message = create_message(GnutellaBodyId.PING)
+    basic_servent.on_receive(test_handler, ping_message)
+    # second one test on forward table
+    basic_servent.on_receive(test_handler, ping_message)
+    pong_message = create_message(GnutellaBodyId.PONG, ip = basic_servent.reactor.ip, 
+                                  port = basic_servent.reactor.port, num_of_files = 0, 
+                                  num_of_kb = 0)
+    basic_servent.on_receive(test_handler, pong_message)
+    pong_message2 = create_message(GnutellaBodyId.PONG, message_id = ping_message.message_id,
+                                   ip = basic_servent.reactor.ip, port = basic_servent.reactor.port, 
+                                   num_of_files = 0, num_of_kb = 0)
+    basic_servent.on_receive(test_handler, pong_message2)
+    query_message = create_message(GnutellaBodyId.QUERY, min_speed = 2, search_criteria = 'hello world')
+    basic_servent.on_receive(test_handler, query_message)
+    #queryhit_message = create_message(GnutellaBodyId.QUERYHIT)
+    close_all()
+
 def test_servent():
     receive_servent = ReceiveServent()
     send_servent = SendServent()

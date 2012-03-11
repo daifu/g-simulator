@@ -37,6 +37,6 @@ if __name__ == '__main__':
     receive_servent.reactor.gnutella_connect(send_servent.reactor.address)
     
     try:
-        asyncore.loop()
+        asyncore.loop(timeout=1,count=10)
     finally:
         asyncore.close_all()

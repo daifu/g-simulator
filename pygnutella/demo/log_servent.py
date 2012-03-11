@@ -31,8 +31,8 @@ class LogServent(BasicServent):
             self.log("forward() -> %s", message)
         return ret
     
-    def flood(self, connection_handler, message):
-        self.log("flood() -> %s", message)
+    def flood(self, connection_handler, message):        
         ret = BasicServent.flood(self, connection_handler, message)
-        self.log("number of flooded connection = %d", ret)
+        if ret:
+            self.log("flood(%d) -> %s", ret, message)
         return ret

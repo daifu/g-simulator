@@ -53,6 +53,7 @@ def test_on_receive():
     query_message = create_message(GnutellaBodyId.QUERY, min_speed = 2, search_criteria = 'hello world')
     basic_servent.on_receive(test_handler, query_message)
     #queryhit_message = create_message(GnutellaBodyId.QUERYHIT)
+    #TODO:
     close_all()
 
 def test_servent():

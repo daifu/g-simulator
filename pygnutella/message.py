@@ -17,7 +17,7 @@ class Message:
         self.body = None
         self.payload_length = None
         self.payload_descriptor = None
-        self.fmt = '!16sbbbI'
+        self.fmt = '!16sBBBI'
         self.HEADER_LENGTH = calcsize(self.fmt)
             
     def decrease_ttl(self, value=1):

@@ -31,5 +31,7 @@ class LogServent(BasicServent):
         return ret
     
     def flood(self, connection_handler, message):
-        self.num_tx_byte += len(message.serialize())*(len(self.reactor.channels)-1)        
-        BasicServent.flood(self, connection_handler, message)
+        ret = BasicServent.flood(self, connection_handler, message) 
+        self.num_tx_byte += len(message.serialize())*ret
+        return ret        
+        

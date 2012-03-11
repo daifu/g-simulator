@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import logging, random, uuid, copy
-=======
 import logging, random, uuid, copy, time
->>>>>>> master
 from reactor import Reactor
 from messagebody import GnutellaBodyId
 from message import create_message

@@ -129,14 +129,8 @@ class ConnectionHandler(asyncore.dispatcher):
         return
                 
     def writable(self):            
-<<<<<<< HEAD
-        response = bool(self._data_to_write) and self.connected
-        self.reactor.servent.log("writable() -> %s", response)
-        return response       
-=======
         response = bool(self._data_to_write)
         return response
->>>>>>> master
         
     def handle_close(self):
         self.reactor.servent.log('handle_close()')       
@@ -159,15 +153,9 @@ class ConnectionHandler(asyncore.dispatcher):
         """
             Write as much as possible
         """
-<<<<<<< HEAD
-        num_sent = asyncore.dispatcher.send(self,self._data_to_write)
-        self.reactor.servent.log("handle_write() -> to: %s buffer: %d sent: %d", self.socket.getpeername(), len(self._data_to_write), num_sent)        
-        self._data_to_write = self._data_to_write[num_sent:]
-=======
         sent = self.send(self._data_to_write)
         #self.reactor.servent.log("handle_write() -> to: %s buffer: %d sent: %d", self.socket.getpeername(), len(self._data_to_write), sent)        
         self._data_to_write = self._data_to_write[sent:]
->>>>>>> master
         # check flag: close_after_last_write
         if self._close_when_done and not self.writable():
             self.reactor.servent.log("close_when_done()")

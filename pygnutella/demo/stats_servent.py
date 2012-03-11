@@ -25,8 +25,10 @@ class LogServent(BasicServent):
         BasicServent.send_message(self, message, handler)        
         
     def forward(self, message):
-        self.num_tx_byte += len(message.serialize())
-        return BasicServent.forward(self, message)
+        ret = BasicServent.forward(self, message)
+        if ret:
+            self.num_tx_byte += len(message.serialize())
+        return ret
     
     def flood(self, connection_handler, message):
         self.num_tx_byte += len(message.serialize())*(len(self.reactor.channels)-1)        

@@ -32,16 +32,15 @@ class QueryServent(BasicServent):
             neighbor_port = message.body.port
             if (neighbor_ip, neighbor_port) not in self.neighbors:
                 self.neighbors[(neighbor_ip, neighbor_port)] = connection_handler
-
         BasicServent.on_receive(self, connection_handler, message)
 
     def flood(self, search_criteria):
-        self.log('QueryServent flood(): %s', message.body)
+        self.log('QueryServent flood(): %s', search_criteria)
         #Send message to all its neighbors
         query_message = create_message(GnutellaBodyId.QUERY, None, 7,
                 min_speed=10, search_criteria=search_criteria)
-        for handler in self.neighbors:
-            BasicServent.send_message(query_message, handler)
+        for key in self.neighbors:
+            self.send_message(query_message, self.neighbors[key])
 
 class QueryHitServent(BasicServent):
     def __init__(self):
@@ -64,10 +63,10 @@ def main():
                                  FileInfo(2,"second file", 2500) ,
                                  FileInfo(3, "third file", 5000)])
     query_hit_servent.reactor.gnutella_connect(query_servent.reactor.address)
-    # query_servent.flood('first file')
     try:
         scheduler_loop(timeout=1,count=10)
     finally:
+        query_servent.flood('first file')
         close_all()
 
 

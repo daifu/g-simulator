@@ -36,4 +36,6 @@ class LogServent(BasicServent):
     
     def flood(self, connection_handler, message):
         self.log("flood() -> %s", message)
-        BasicServent.flood(self, connection_handler, message)
+        ret = BasicServent.flood(self, connection_handler, message)
+        self.log("number of flooded connection = %d", ret)
+        return ret

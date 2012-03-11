@@ -193,8 +193,7 @@ class BasicServent:
         # create a deep copy
         message = copy.deepcopy(message)        
         message.decrease_ttl()
-        self.reactor.broadcast_except_for(connection_handler, message)
-        return
+        return self.reactor.broadcast_except_for(connection_handler, message)
            
     def set_files(self, files):
         # each member of files is a FileInfo 

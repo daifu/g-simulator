@@ -17,8 +17,13 @@ class FileInfo:
         self.file_size = file_size
    
 class BasicServent:
-    # Fixed expire time interval on forwarding
-    # in unit of second
+    """
+    This class implements everything that a Servent "must do" as part of Gnutella 0.4 protocol
+    
+    To add more feature, simply derive this. You can either override entire method or
+    add more functionality by implement it and then add parent's method.
+    """
+    # Fixed expiration period  per ttl in unit of second
     FIXED_EXPIRED_INTERVAL = 5
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        

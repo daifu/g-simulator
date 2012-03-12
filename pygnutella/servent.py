@@ -142,6 +142,12 @@ class BasicServent:
         self._logger.debug(msg, *args, **kwargs)
     
     def send_message(self, message, handler):
+        """
+        Servent sends its own message (not as part of flood / forwarding)
+        
+        By using this method, Servent can keep track which message (by message_id) is its own
+        by adding it to ignore dictionary.
+        """
         if message.payload_descriptor == GnutellaBodyId.QUERY or message.payload_descriptor == GnutellaBodyId.PING:
             self.ignore[message.message_id] = time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl
         handler.write(message.serialize())

@@ -47,6 +47,7 @@ class Message:
             raise ValueError
         # shorten the raw_data to body
         raw_data = raw_data[self.HEADER_LENGTH:]
+        # if check raw_data has enough data for payload
         if len(raw_data) < self.payload_length:
             return None
         # deserialize the body
@@ -60,9 +61,11 @@ class Message:
             self.body = QueryBody(self)
         elif self.payload_descriptor == GnutellaBodyId.QUERYHIT:
             self.body = QueryHitBody(self)
+        else:
+            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
         # final check if deserialize correctly with payload_length given in the header
         if self.body.deserialize(raw_data[:self.payload_length]) == None:
-            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
+            raise ValueError("body should be able to deserialize")
         return self.payload_length + self.HEADER_LENGTH
     
     def __repr__(self):        

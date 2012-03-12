@@ -116,7 +116,7 @@ class BasicServent:
         """
         # resource clean up
         # clean up forwarding table
-        remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]
+        remove = [k for k,v in self.forwarding_table.iteritems() if v[0] == connection_handler]
         for k in remove: 
             del self.forwarding_table[k]
         return

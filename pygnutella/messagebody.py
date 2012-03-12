@@ -52,10 +52,10 @@ class PingBody(IMessageBody):
         self.message.payload_descriptor = GnutellaBodyId.PING
         return
 
-    def serialize(self):
+    def __repr__(self):
         return ''
 
-    def __repr__(self):
+    def serialize(self):
         return ''
     
     def deserialize(self, raw_data):

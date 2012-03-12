@@ -80,6 +80,9 @@ class PongBody(IMessageBody):
         self.__length = 2+4+4+4
         return
 
+    def __repr__(self):
+        return "ip=%s, port=%s, num_of_file=%s, num_of_kb=%s" % (self.ip, self.port, self.num_of_files, self.num_of_kb)
+
     def serialize(self):
         assert self.ip != None
         assert self.port != None

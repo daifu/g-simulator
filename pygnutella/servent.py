@@ -189,16 +189,31 @@ class BasicServent:
         return False 
             
     
-    def flood(self, connection_handler, message):
+    def flood(self, received_handler, message):
         """
-        Flood message to every directly connected servent
+        Flood other servent's message to every directly connected servent other
+        than the received handler. This method is used as part of forwarding of ping, query
+        
+        return number of connection is flooded
         """
         if message.ttl < 2:
-            return
+            return 0
         # create a deep copy
         message = copy.deepcopy(message)        
         message.decrease_ttl()
-        return self.reactor.broadcast_except_for(connection_handler, message)
+        return self.reactor.broadcast_except_for(received_handler, message)
+
+    def flood_ex(self, message):
+        """
+        Flood your own message to every directly connected servent
+
+        return number of connection is flooded
+        """
+        # you can only flood query or ping message by definition of protocol
+        if message.payload_descriptor == GnutellaBodyId.QUERY or message.payload_descriptor == GnutellaBodyId.PING:
+            self.ignore[message.message_id] = time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl
+            return self.reactor.broadcast_except_for(None, message)
+        return 0
            
     def set_files(self, files):
         # each member of files is a FileInfo 

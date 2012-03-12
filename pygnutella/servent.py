@@ -22,7 +22,7 @@ class BasicServent:
     FIXED_EXPIRED_INTERVAL = 5
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        
-        # forwarding table: (message_id, payload_type) -> (connection_handler, timestamp)
+        # forwarding table: (message_id, payload_type) -> (connection_handler, expiration)
         self.forwarding_table = {}
         # flood/forward ignore table: message_id -> timestamp
         # this table used to prevent loop in flood
@@ -66,9 +66,11 @@ class BasicServent:
         """
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
-            not_in_forwarding_table = (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table
-            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time()) 
-            if  not_in_forwarding_table and not_ignore_or_expire:                                 
+            forward_key = (message.message_id, GnutellaBodyId.PONG)
+            now = time.time()
+            not_seen_or_expire = forward_key not in self.forwarding_table or (self.forwarding_table[forward_key][1] < now)
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < now) 
+            if  not_seen_or_expire and not_ignore_or_expire:                                 
                 # send Ping to any neighbor that not the one servent recceived the Ping from
                 self.flood(connection_handler, message)
                 # add ping to forwarding table to forward PONG
@@ -88,9 +90,11 @@ class BasicServent:
             self.forward(message)
         elif message.payload_descriptor == GnutellaBodyId.QUERY:
             # check if we saw this query before. If not, then process
-            not_in_forwarding_table = (message.message_id, GnutellaBodyId.QUERYHIT) not in self.forwarding_table
-            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time())            
-            if not_in_forwarding_table and not_ignore_or_expire:
+            forward_key = (message.message_id, GnutellaBodyId.QUERYHIT)
+            now = time.time()
+            not_seen_or_expire = forward_key not in self.forwarding_table or (self.forwarding_table[forward_key][1] < now)
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < now)             
+            if not_seen_or_expire and not_ignore_or_expire:
                 # add to forwarding table to forward QUERYHIT
                 self.put_into_forwarding_table(message, connection_handler)
                 # forward query packet to neighbor servent
@@ -138,8 +142,9 @@ class BasicServent:
         handler.write(message.serialize())
     
     def put_into_forwarding_table(self, message, handler):
+        now = time.time()
         message_id = copy.deepcopy(message.message_id)
-        value = (handler, time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl)
+        value = (handler, now+self.FIXED_EXPIRED_INTERVAL*message.ttl)
         key = None
         if message.payload_descriptor == GnutellaBodyId.QUERYHIT:
             key = (message_id, message.body.servent_id, GnutellaBodyId.PUSH)            

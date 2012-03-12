@@ -18,6 +18,7 @@ class QueryServent(BasicServent):
     def __init__(self):
         logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
         self.neighbors = {}
+        self.cache = []
         BasicServent.__init__(self)
 
     def on_connect(self, connection_handler):
@@ -36,6 +37,11 @@ class QueryServent(BasicServent):
             if (neighbor_ip, neighbor_port) not in self.neighbors:
                 self.neighbors[(neighbor_ip, neighbor_port)] =\
                                                         connection_handler
+        if message.payload_descriptor is GnutellaBodyId.QUERYHIT:
+            # TODO: Save the path
+            self.save_cache()
+            # Start downloading
+            self.log("Downloaded")
         BasicServent.on_receive(self, connection_handler, message)
 
     def flood(self, search_criteria):
@@ -47,6 +53,9 @@ class QueryServent(BasicServent):
                                         search_criteria=search_criteria)
         for key in self.neighbors:
             self.send_message(query_message, self.neighbors[key])
+
+    def save_cache(self):
+        pass
 
 class QueryHitServent(BasicServent):
     def __init__(self):
@@ -67,12 +76,9 @@ class QueryHitServent(BasicServent):
                 # Send query hit message back.
                 # Construct queryhit message
                 ip, port = self.reactor.address
-                self.log("ip: %s, port: %s, id: %s", ip, port, self.id)
-                result_set=[{
-                   'file_index':1,
-                   'file_size': 600,
-                   'file_name': 'first file'
-                }]
+                result_set = []
+                for result in match:
+                    result_set.append(result.get_result_set())
                 num_of_hits = len(result_set)
                 ip = dotted_quad_to_num(ip)
                 query_hit_message = create_message(GnutellaBodyId.QUERYHIT,

@@ -4,12 +4,15 @@ import logging
 import sys
 
 def main(args):
+    print "Please use Ctrl+C to terminate"
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
     dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
     DagBootstrap(dag)
-
+    
     try:
         schedule_loop()
+    except (KeyboardInterrupt, SystemExit):
+        pass
     finally:
         close_all()
 

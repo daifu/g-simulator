@@ -169,7 +169,7 @@ class QueryHitBody(IMessageBody):
     Query hit body includes number of hits, port, ip address, speed, result
     set, servent identifier.
     
-    Result set include file index, file size, and file name
+    Result set is a list of result of dictionary with keys: file_index, file_size, and file_name
     """
     def __init__(self, message, num_of_hits = None, ip = None, port = None, speed = None, result_set = None, servent_id = None):
         IMessageBody.__init__(self, message)

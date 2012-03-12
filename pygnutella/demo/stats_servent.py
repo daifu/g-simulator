@@ -1,6 +1,6 @@
 from ..servent import BasicServent
 
-class LogServent(BasicServent):    
+class StatsServent(BasicServent):    
     def __init__(self, port = 0, files = [], bootstrap_address = None):
         BasicServent.__init__(self, port, files, bootstrap_address)
         self.num_requested_conn = 0

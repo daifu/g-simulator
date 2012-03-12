@@ -113,6 +113,9 @@ class PushBody(IMessageBody):
         self.fmt = "!16sILH"
         return
 
+    def __repr__(self):
+        return 'servent_id=%s, ip=%s, port=%s, file_index=%s' % (self.servent_id, self.ip, self.port, self.file_index) 
+
     def serialize(self):
         assert self.servent_id != None
         assert self.file_index != None

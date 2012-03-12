@@ -3,6 +3,7 @@ from pygnutella.message import create_message
 from pygnutella.messagebody import GnutellaBodyId
 from pygnutella.scheduler import loop as scheduler_loop, close_all
 from copy import deepcopy
+from pygnutella.utils import dotted_quad_to_num
 import logging
 
 #TODO:
@@ -26,19 +27,24 @@ class QueryServent(BasicServent):
 
     def on_receive(self, connection_handler, message):
         self.log('QueryServent on_receive(): %s', message.body)
-        if message.payload_descriptor is not GnutellaBodyId.PING:
+        # Check if message has ip attribute, which either are PONG, QUERYHIT,
+        # and PUSH
+        if hasattr(message.body, 'ip'):
             # Save the connection handler
             neighbor_ip = message.body.ip
             neighbor_port = message.body.port
             if (neighbor_ip, neighbor_port) not in self.neighbors:
-                self.neighbors[(neighbor_ip, neighbor_port)] = connection_handler
+                self.neighbors[(neighbor_ip, neighbor_port)] =\
+                                                        connection_handler
         BasicServent.on_receive(self, connection_handler, message)
 
     def flood(self, search_criteria):
         self.log('QueryServent flood(): %s', search_criteria)
+        self.log('QueryServent neighbors: %s', self.neighbors)
         #Send message to all its neighbors
-        query_message = create_message(GnutellaBodyId.QUERY, None, 7,
-                min_speed=10, search_criteria=search_criteria)
+        query_message = create_message(GnutellaBodyId.QUERY,
+                                        min_speed=10,
+                                        search_criteria=search_criteria)
         for key in self.neighbors:
             self.send_message(query_message, self.neighbors[key])
 
@@ -49,11 +55,36 @@ class QueryHitServent(BasicServent):
 
     def on_receive(self, connection_handler, message):
         self.log('QueryHitServent on_receive(): %s', message.body)
-        if message.payload_descriptor is not GnutellaBodyId.PING:
+        if hasattr(message.body, 'ip'):
             neighbor_ip = message.body.ip
             neighbor_port = message.body.port
             if (neighbor_ip, neighbor_port) not in self.neighbors:
                 self.neighbors[(neighbor_ip, neighbor_port)] = connection_handler
+        # Search throught its files if the message is QUERY
+        if message.payload_descriptor is GnutellaBodyId.QUERY:
+            match = self.search(message.body.search_criteria)
+            if match:
+                # Send query hit message back.
+                # Construct queryhit message
+                ip, port = self.reactor.address
+                self.log("ip: %s, port: %s, id: %s", ip, port, self.id)
+                result_set=[{
+                   'file_index':1,
+                   'file_size': 600,
+                   'file_name': 'first file'
+                }]
+                num_of_hits = len(result_set)
+                ip = dotted_quad_to_num(ip)
+                query_hit_message = create_message(GnutellaBodyId.QUERYHIT,
+                                                   num_of_hits=num_of_hits,
+                                                   ip=ip,
+                                                   port=int(port),
+                                                   speed=100,
+                                                   result_set=result_set,
+                                                   servent_id=self.id)
+                self.send_message(query_hit_message, connection_handler)
+            else:
+                self.log("Query Not Found!")
         BasicServent.on_receive(self, connection_handler, message)
 
 def main():
@@ -67,6 +98,7 @@ def main():
         scheduler_loop(timeout=1,count=10)
     finally:
         query_servent.flood('first file')
+        scheduler_loop(timeout=1,count=10)
         close_all()
 
 

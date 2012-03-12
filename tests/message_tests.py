@@ -33,7 +33,6 @@ def test_message():
 def test_create_query_message():
     msg_id = 'something'
     ttl = 7
-    # msg = create_message(GnutellaBodyId.PING)
     msg = create_message(GnutellaBodyId.QUERY,
                          msg_id, ttl,
                          min_speed=10,
@@ -44,4 +43,6 @@ def test_create_query_message():
     assert_equal(msg.body.min_speed, 10)
 
     # test serialize()
-    msg.serialize()
+    expected_msg =\
+    'something\x00\x00\x00\x00\x00\x00\x00\x80\x07\x00\x00\x00\x00\x06\nfile\x00'
+    assert_equal(msg.serialize(), expected_msg)

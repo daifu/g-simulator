@@ -55,6 +55,9 @@ class PingBody(IMessageBody):
     def serialize(self):
         return ''
 
+    def __repr__(self):
+        return ''
+    
     def deserialize(self, raw_data):
         return 0
 

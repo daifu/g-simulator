@@ -36,3 +36,9 @@ class LogServent(BasicServent):
         if ret:
             self.log("flood(%d) -> %s", ret, message)
         return ret
+
+    def flood_ex(self, message):        
+        ret = BasicServent.flood_ex(self, message)
+        if ret:
+            self.log("flood_ex(%d) -> %s", ret, message)
+        return ret

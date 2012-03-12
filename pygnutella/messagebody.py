@@ -145,6 +145,9 @@ class QueryBody(IMessageBody):
         self.fmt = ""
         return
 
+    def __repr__(self):
+        return 'min_speed=%d, search_criteria=%s' % (self.min_speed, self.search_criteria)
+
     def serialize(self):
         assert self.min_speed != None
         assert self.search_criteria != None

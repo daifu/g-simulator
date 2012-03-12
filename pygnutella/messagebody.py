@@ -182,6 +182,9 @@ class QueryHitBody(IMessageBody):
         self.num_of_hits = num_of_hits
         return
 
+    def __repr__(self):
+        return 'ip=%s, port=%s, speed=%s, servent_id=%s, result_set(%s)=%s' % (self.ip, self.port, self.speed, self.servent_id, self.num_of_hits, self.result_set)
+
     def serialize(self):
         assert self.num_of_hits != None
         assert self.ip != None

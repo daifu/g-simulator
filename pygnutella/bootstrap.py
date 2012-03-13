@@ -6,6 +6,8 @@ from numpy.random import binomial, randint
 
 class SimpleBootstrap(asyncore.dispatcher):
     """
+    SimpleBootstrap
+    
     A new node simply connects to the last node posted ip/addr
     
     example:
@@ -140,6 +142,8 @@ class BootstrapOutHandler(asynchat.async_chat):
         
 class DagBootstrap(SimpleBootstrap):
     """
+    DagBootstrap
+    
     This is DAG (directly asyclic graph) bootstrap.
     You can pass in a DAG to tell how the node connects to each
     other initially. If it does not specific,
@@ -211,6 +215,14 @@ class DagBootstrap(SimpleBootstrap):
     
 class RandomBootstrap(SimpleBootstrap):
     """
+    RandomBootstrap
+    
+    RandomBootstrap will take an input between 0.0 and 1.0 exclusive
+    for probability to determine a node address should
+    be included into the request ip. RandomBootstrap
+    will always guarantee to return at least one address
+    for bootstrap to prevent network partition.
+    
     example: 
     for p = 0.7, 
     

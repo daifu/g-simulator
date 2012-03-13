@@ -28,7 +28,8 @@ class BasicServent:
     FIXED_EXPIRED_INTERVAL = 5
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        
-        # forwarding table: (message_id, payload_type) -> (connection_handler, timestamp)
+        # forwarding table: (message_id, payload_type) -> (connection_handler,
+        # timestamp), it is for flood()
         self.forwarding_table = {}
         # flood/forward ignore table: message_id -> timestamp
         # this table used to prevent loop in flood

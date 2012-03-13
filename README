@@ -3,9 +3,27 @@ Demo
 
 First start up bootstrap node
 > python run_bootstrap.py
+OR
+> python run_bootstrap.py SimpleBootstrap
+OR
+> python run_bootstrap.py RandomBootstrap <probability from 0 to 1>
+OR
+> python run_bootstrap.py DagBootstrap <an adjacent list string>
 
-Second run servent nodes. 
+Second run servent nodes to build the network. 
 > python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
+
+Help commands
+=======================
+
+Help commands on different bootstraping:
+> python run_bootstrap.py help
+OR
+> python run_bootstrap.py help SimpleBootstrap
+OR
+> python run_bootstrap.py help RandomBootstrap
+OR
+> python run_bootstrap.py help DagBootstrap
 
 Check required packages
 =======================

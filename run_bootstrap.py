@@ -15,7 +15,7 @@ dagbootstrap_usage = "an adjacent list is specified as follow\n\
 example: python run_bootstrap.py DagBootstrap 3 : 1, 2; 1:0; 2:1,0; 3: 0 is\n\
 adjacency list {1: [0], 2: [1,0], 3: [0]}"
 
-bootstrap_table = {"SimpleBootstrap": (SimpleBootstrap, ""),
+bootstrap_table = {"SimpleBootstrap": (SimpleBootstrap, "Please python run_bootstrap.py SimpleBootstrap"),
                    "RandomBootstrap": (RandomBootstrap, randombootstrap_usage),
                    "DagBootstrap": (DagBootstrap, dagbootstrap_usage)}
 
@@ -44,15 +44,15 @@ def main(argv, argc):
                 print "* ", bt
             print "You can find out how to run any of above Bootstrap by typing: "
             print "python run_bootstrap.py help <bootstrap name>"
-        elif argv[1] == 'SimpleBootstrap':
-            # TODO: explain SimpleBootstrap
-            pass        
-        elif argv[1] == 'RandomBootstrap':
-            # TODO: explain RandomBootstrap
-            pass        
-        elif argv[1] == 'DagBootstrap':
-            # TODO: explain DagBootstrap
-            pass
+        else:
+            name = argv[1]
+            for bt in bootstrap_table.keys():
+                if bt == name:
+                    if bootstrap_table[bt][0].__doc__:
+                        print bootstrap_table[bt][0].__doc__
+                    print bootstrap_table[bt][1]
+                    return
+            print "We cannot find a bootstrap with name %s" % name
         return
     
     if argv[0] == 'SimpleBootstrap':

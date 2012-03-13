@@ -14,7 +14,7 @@ class SimpleBootstrap(asyncore.dispatcher):
     
     def __init__(self):
         self.nodes = []
-        self.logger = logging.getLogger("Bootstrap") 
+        self.logger = logging.getLogger(self.__name__) 
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind socket to a public ip (not localhost or 127.0.0.1)

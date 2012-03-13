@@ -3,6 +3,9 @@ from pygnutella.scheduler import loop as schedule_loop, close_all
 import logging
 import sys
 
+additional_note = "Note: if you want to run our network with this bootstrap, \
+please open another terminal in the same directory and run\n\
+python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>"
 
 bootstraps = [SimpleBootstrap, RandomBootstrap, DagBootstrap]
 bt_name = [bt.__name__ for bt in bootstraps]
@@ -38,6 +41,7 @@ def main(argv, argc):
                 if bt.__name__ == name:
                     if bt.__doc__:
                         print bt.__doc__
+                        print additional_note
                     return
             print "We cannot find a bootstrap with name %s" % name
         return

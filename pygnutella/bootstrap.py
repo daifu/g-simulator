@@ -10,8 +10,12 @@ class SimpleBootstrap(asyncore.dispatcher):
     
     A new node simply connects to the last node posted ip/addr
     
-    example:
+    Example:
     python run_bootstrap.py SimpleBootstrap
+    
+    Note: if you want to run our network with this bootstrap, please
+    open another terminal in the same directory and run
+    python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
     """
     
     def __init__(self):
@@ -158,11 +162,16 @@ class DagBootstrap(SimpleBootstrap):
     + order is not important
     + repetition will result in override and last copy is the list\n\
     
-    example: 
+    Example: 
     python run_bootstrap.py DagBootstrap '3 : 1, 2; 1:0; 2:1,0; 3: 0'
     
     result in
-    Adjacency list {1: [0], 2: [1,0], 3: [0]}    
+    Adjacency list {1: [0], 2: [1,0], 3: [0]}
+    
+    Note: if you want to run our network with this bootstrap, please
+    open another terminal in the same directory and run
+    python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
+
     """
     def __init__(self, dag=[]):
         SimpleBootstrap.__init__(self)
@@ -223,10 +232,15 @@ class RandomBootstrap(SimpleBootstrap):
     will always guarantee to return at least one address
     for bootstrap to prevent network partition.
     
-    example: 
+    Example: 
     for p = 0.7, 
     
     python run_bootstrap.py RandomBootstrap 0.7
+    
+    Note: if you want to run our network with this bootstrap, please
+    open another terminal in the same directory and run
+    python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
+
     """
     def __init__(self, p):
         """

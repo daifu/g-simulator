@@ -171,7 +171,7 @@ class QueryHitBody(IMessageBody):
     
     Result set is a list of result of dictionary with keys: file_index, file_size, and file_name
     """
-    def __init__(self, message, num_of_hits = None, ip = None, port = None, speed = None, result_set = None, servent_id = None):
+    def __init__(self, message, ip = None, port = None, speed = None, result_set = [], servent_id = None):
         IMessageBody.__init__(self, message)
         self.message.payload_descriptor = GnutellaBodyId.QUERYHIT
         self.ip = ip
@@ -179,14 +179,13 @@ class QueryHitBody(IMessageBody):
         self.speed = speed
         self.result_set = result_set
         self.servent_id = servent_id
-        self.num_of_hits = num_of_hits
+        self.num_of_hits = len(result_set)
         return
 
     def __repr__(self):
         return 'ip=%s, port=%s, speed=%s, servent_id=%s, result_set(%s)=%s' % (self.ip, self.port, self.speed, self.servent_id, self.num_of_hits, self.result_set)
 
     def serialize(self):
-        assert self.num_of_hits != None
         assert self.ip != None
         assert self.port != None
         assert self.speed != None

@@ -82,8 +82,7 @@ def create_message(message_type, message_id = None, ttl = 7, **kwargs):
     elif message_type == GnutellaBodyId.QUERY:
         QueryBody(message, kwargs['min_speed'], kwargs['search_criteria'])
     elif message_type == GnutellaBodyId.QUERYHIT:
-        QueryHitBody(message, 
-                     kwargs['num_of_hits'], 
+        QueryHitBody(message,
                      kwargs['ip'], 
                      kwargs['port'], 
                      kwargs['speed'], 

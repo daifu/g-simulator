@@ -1,20 +1,68 @@
-from pygnutella.bootstrap import DagBootstrap
+from pygnutella.bootstrap import DagBootstrap, SimpleBootstrap, RandomBootstrap
 from pygnutella.scheduler import loop as schedule_loop, close_all
 import logging
 import sys
 
-def main(args):
+
+randombootstrap_usage = "example: for p = 0.7, please python run_bootstrap.py RandomBootstrap 0.7"
+dagbootstrap_usage = "an adjacent list is specified as follow\n\
++ a semi-colon denote separation list\n\
++ a colon than sign denote mapping\n\
++ a coma denote separation of node inside a list, but not last node\n\
++ space is not important\n\
++ order is not important\n\
++ repetition will result in override and last copy is the list\n\
+example: python run_bootstrap.py DagBootstrap 3 : 1, 2; 1:0; 2:1,0; 3: 0 is\n\
+adjacency list {1: [0], 2: [1,0], 3: [0]}"
+
+bootstrap_table = {"SimpleBootstrap": (SimpleBootstrap, ""),
+                   "RandomBootstrap": (RandomBootstrap, randombootstrap_usage),
+                   "DagBootstrap": (DagBootstrap, dagbootstrap_usage)}
+
+def main(argv, argc):
     print "Please use Ctrl+C to terminate"
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
-    dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
-    DagBootstrap(dag)
+    if argc == 0:
+        print "Running with default behavior."
+        print "To see other options, please run with python run_bootstrap help"        
+        dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
+        print "The default is DagBootstrap with %s" % dag
+        DagBootstrap(dag)
+        
+        try:
+            schedule_loop()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        finally:
+            close_all()
+        return
     
-    try:
-        schedule_loop()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    finally:
-        close_all()
+    if argv[0] == 'help':
+        if argc == 1:
+            # TODO: output three options of bootstrap you can choose
+            pass
+        elif argv[1] == 'SimpleBootstrap':
+            # TODO: explain SimpleBootstrap
+            pass        
+        elif argv[1] == 'RandomBootstrap':
+            # TODO: explain RandomBootstrap
+            pass        
+        elif argv[1] == 'DagBootstrap':
+            # TODO: explain DagBootstrap
+            pass
+        return
+    
+    if argv[0] == 'SimpleBootstrap':
+        # TODO
+        return
+    
+    if argv[0] == 'RandomBootstrap':
+        # TODO
+        return
+    
+    if argv[0] == 'DagBootstrap':
+        # TODO
+        return
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv[1:], len(sys.argv)-1)

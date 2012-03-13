@@ -247,13 +247,8 @@ class ServerHandler(ConnectionHandler):
                     break
         except ValueError:
             # The message stream is messed up
-<<<<<<< HEAD
             self.reactor.servent.log("Mesage stream is messed up")
             self.handle_close()        
-=======
-            self.reactor.servent.log("Message stream is messed up, check deserialize()")
-            self.handle_close()
->>>>>>> 3d0b42c9bfc9915a1e323002f9a1178a9ddd7daa
                 
     def _download(self):
         if not self._received_download_request and '\r\n\r\n' in self.received_data:
@@ -337,11 +332,7 @@ class GnutellaClientHandler(ConnectionHandler):
                     break
         except ValueError:
             # The message stream is messed up
-<<<<<<< HEAD
             self.reactor.servent.log("Mesage stream is messed up")
-=======
-            self.reactor.servent.log("Message stream is messed up, check deseralize()")
->>>>>>> 3d0b42c9bfc9915a1e323002f9a1178a9ddd7daa
             self.handle_close()
     
     def handle_close(self):
@@ -422,8 +413,4 @@ class DownloadClientHandler(ConnectionHandler):
             self.reactor.servent.on_download(DownloadEventId.CONNECTION_REFUSE, self)
         elif self.num_bytes > 0 and self.num_bytes < self.max_bytes and self._got_response:
             self.reactor.servent.on_download(DownloadEventId.DOWNLOAD_INCOMPLETE, self)        
-<<<<<<< HEAD
         return
-=======
-        return
->>>>>>> 3d0b42c9bfc9915a1e323002f9a1178a9ddd7daa

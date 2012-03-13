@@ -12,13 +12,13 @@ class SimpleBootstrap(asyncore.dispatcher):
     python run_bootstrap.py SimpleBootstrap
     """
     
-    def __init__(self, port = 0):
+    def __init__(self):
         self.nodes = []
         self.logger = logging.getLogger("Bootstrap") 
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind socket to a public ip (not localhost or 127.0.0.1)
-        self.bind((socket.gethostname(), port))
+        self.bind((socket.gethostname(), 0))
         # get socket address for future use
         self.addr = self.socket.getsockname()
         self.logger.info("address at %s %s" % (self.addr))        
@@ -32,6 +32,14 @@ class SimpleBootstrap(asyncore.dispatcher):
 
     def add_node(self, address):
         self.nodes.append(address)
+
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        return {}
         
     def get_node(self):
         # return the last join node or empty list if _node is empty
@@ -182,6 +190,15 @@ class DagBootstrap(SimpleBootstrap):
         self._counter += 1
         return ret
     
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        arg = "".join(argv)
+        return {}    
+    
 class RandomBootstrap(SimpleBootstrap):
     """
     example: 
@@ -210,4 +227,13 @@ class RandomBootstrap(SimpleBootstrap):
             return [self.nodes[randint(0, len(self.nodes)-1)]]
         # if not empty, return the node
         return ret
-        
+
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        p = float(argv[0])
+        return {'p': p}   
+            

@@ -42,8 +42,19 @@ def main(argv, argc):
             print "We cannot find a bootstrap with name %s" % name
         return
     elif argv[0] in bt_name:
-        # TODO: think of a way to scale usage() and parse() parameter for bootstrap
-        pass
+        name = argv[0]
+        for bt in bootstraps:
+            if bt.__name__ == name:
+                kwargs = bt.parse(argv[1:])
+                bt(**kwargs)
+                
+                try:
+                    schedule_loop()
+                except (KeyboardInterrupt, SystemExit):
+                    pass
+                finally:
+                    close_all()
+                return
     else:
         print "No parameter matches. Please python run_bootstrap.py help for help"
 

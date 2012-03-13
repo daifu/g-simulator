@@ -1,4 +1,5 @@
-import logging, random, uuid, copy, time
+import logging, uuid, copy, time
+from numpy.random import binomial
 from reactor import Reactor
 from messagebody import GnutellaBodyId
 from message import create_message
@@ -289,7 +290,7 @@ class RandomWalkServent(BasicServent):
         packet = message.serialize()
         for handler in self.reactor.channels:
             if not handler == connection_handler:
-                if random.randint(0, 10) & 1:
+                if binomial(1, 0.5) == 1:
                     handler.write(packet)
 
 class SilentServent(BasicServent):

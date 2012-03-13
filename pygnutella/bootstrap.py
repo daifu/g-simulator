@@ -2,6 +2,7 @@ import asyncore
 import asynchat
 import socket
 import logging
+from numpy.random import binomial, randint
 
 class SimpleBootstrap(asyncore.dispatcher):
     nodes = []
@@ -155,3 +156,24 @@ class DagBootstrap(SimpleBootstrap):
         # increase node index
         self._counter += 1
         return ret
+    
+class RandomBootstrap(SimpleBootstrap):
+    def __init__(self, p):
+        """
+        p is a probability of selecting a node
+        """
+        SimpleBootstrap.__init__(self)
+        self._p = p
+        
+    def get_node(self):
+        ret = []
+        for address in self.nodes:
+            if binomial(1, self._p) == 1:
+                ret.append(address)
+        # check to see if it is empty
+        if not ret:
+            # using default behavior
+            return [self.nodes[randint(0, len(self.nodes))]]
+        # if not empty, return the node
+        return ret
+        

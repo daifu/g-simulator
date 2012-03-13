@@ -172,6 +172,7 @@ class DagBootstrap(SimpleBootstrap):
         # parameter check
         for k in dag.keys():
             self._dag = [i for i in dag[k] if i < k and i >= 0]
+        self.logger.debug("Dag: " + self._dag)
         
     def get_node(self):
         ret = []
@@ -211,7 +212,11 @@ class RandomBootstrap(SimpleBootstrap):
         p is a probability of selecting a node
         """
         SimpleBootstrap.__init__(self)
+        if p >= 1.:
+            self.logger.debug("p is larger than or equal to 1, change p to 0.5")
+            p = 0.5
         self._p = p
+        self.logger.debug("p is %s", self._p)
         
     def get_node(self):
         if len(self.nodes) < 2:

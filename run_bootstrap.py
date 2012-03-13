@@ -54,18 +54,11 @@ def main(argv, argc):
                     return
             print "We cannot find a bootstrap with name %s" % name
         return
-    
-    if argv[0] == 'SimpleBootstrap':
-        # TODO
-        return
-    
-    if argv[0] == 'RandomBootstrap':
-        # TODO
-        return
-    
-    if argv[0] == 'DagBootstrap':
-        # TODO
-        return
+    elif argv[0] in bootstrap_table:
+        # TODO: think of a way to scale usage() and parse() parameter for bootstrap
+        pass
+    else:
+        print "No parameter matches. Please python run_bootstrap.py help for help"
 
 if __name__ == "__main__":
     main(sys.argv[1:], len(sys.argv)-1)

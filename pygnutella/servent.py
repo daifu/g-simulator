@@ -15,6 +15,7 @@ class FileInfo:
         self.file_id = file_id
         self.file_name = file_name
         self.file_size = file_size
+        
     def get_result_set(self):
         return {
             "file_index": self.file_id,

@@ -5,9 +5,15 @@ import logging
 from numpy.random import binomial, randint
 
 class SimpleBootstrap(asyncore.dispatcher):
-    nodes = []
+    """
+    A new node simply connects to the last node posted ip/addr
+    
+    example:
+    python run_bootstrap.py SimpleBootstrap
+    """
     
     def __init__(self, port = 0):
+        self.nodes = []
         self.logger = logging.getLogger("Bootstrap") 
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -126,7 +132,23 @@ class BootstrapOutHandler(asynchat.async_chat):
         
 class DagBootstrap(SimpleBootstrap):
     """
-    This is DAG (directly asyclic graph) bootstrap
+    This is DAG (directly asyclic graph) bootstrap.
+    You can pass in a DAG to tell how the node connects to each
+    other initially.
+    
+    An adjacent list is specified as follow
+    + a semi-colon denote separation list
+    + a colon than sign denote mapping
+    + a coma denote separation of node inside a list, but not last node
+    + space is not important
+    + order is not important
+    + repetition will result in override and last copy is the list\n\
+    
+    example: 
+    python run_bootstrap.py DagBootstrap 3 : 1, 2; 1:0; 2:1,0; 3: 0
+    
+    result in
+    Adjacency list {1: [0], 2: [1,0], 3: [0]}    
     """
     def __init__(self, dag=[]):
         SimpleBootstrap.__init__(self)
@@ -139,19 +161,19 @@ class DagBootstrap(SimpleBootstrap):
         # node 1 -> node 0
         # node 2 -> node 0, also could include node 1 too
         # node 3 -> node 1, node 2
-        self._dag = dag
+        # parameter check
+        for k in dag.keys():
+            self._dag = [i for i in dag[k] if i < k and i >= 0]
+        
     def get_node(self):
-        cur_node_index = len(self.nodes) - 1 
         ret = []
         try:
             adj_list = self._dag[self._counter]
             for node_index in adj_list:
-                # check input if it is wrong i.e. make servent connect to itself
-                if not node_index == cur_node_index:
-                    try:
-                        ret.append(self.nodes[node_index])
-                    except IndexError:
-                        pass
+                try:
+                    ret.append(self.nodes[node_index])
+                except IndexError:
+                    pass
         except KeyError:
             # if there is no node, return the last connect node
             # the default behavior
@@ -161,6 +183,12 @@ class DagBootstrap(SimpleBootstrap):
         return ret
     
 class RandomBootstrap(SimpleBootstrap):
+    """
+    example: 
+    for p = 0.7, 
+    
+    python run_bootstrap.py RandomBootstrap 0.7
+    """
     def __init__(self, p):
         """
         p is a probability of selecting a node

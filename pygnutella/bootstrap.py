@@ -142,7 +142,9 @@ class DagBootstrap(SimpleBootstrap):
     """
     This is DAG (directly asyclic graph) bootstrap.
     You can pass in a DAG to tell how the node connects to each
-    other initially.
+    other initially. If it does not specific,
+    then that node simply connected to last node posted ip/port
+    to bootstrap
     
     An adjacent list is specified as follow
     + a semi-colon denote separation list
@@ -153,7 +155,7 @@ class DagBootstrap(SimpleBootstrap):
     + repetition will result in override and last copy is the list\n\
     
     example: 
-    python run_bootstrap.py DagBootstrap 3 : 1, 2; 1:0; 2:1,0; 3: 0
+    python run_bootstrap.py DagBootstrap '3 : 1, 2; 1:0; 2:1,0; 3: 0'
     
     result in
     Adjacency list {1: [0], 2: [1,0], 3: [0]}    
@@ -170,9 +172,10 @@ class DagBootstrap(SimpleBootstrap):
         # node 2 -> node 0, also could include node 1 too
         # node 3 -> node 1, node 2
         # parameter check
+        self._dag = {}
         for k in dag.keys():
-            self._dag = [i for i in dag[k] if i < k and i >= 0]
-        self.logger.debug("Dag: " + self._dag)
+            self._dag[k] = [i for i in dag[k] if i < k and i >= 0]
+        self.logger.debug("Dag: %s" % self._dag)
         
     def get_node(self):
         ret = []
@@ -197,8 +200,14 @@ class DagBootstrap(SimpleBootstrap):
         This method is use to parse argv from command line
         to create parameter for constructor for the class
         """
-        arg = "".join(argv)
-        return {}    
+        dag = {}
+        arg = argv[0]
+        adj_lists = arg.split(';')
+        for alist in adj_lists:
+            head, tail = alist.split(':')
+            node_list = tail.split(',')
+            dag[int(head)] = [int(v) for v in node_list]
+        return {'dag': dag}
     
 class RandomBootstrap(SimpleBootstrap):
     """

@@ -141,14 +141,17 @@ class DagBootstrap(SimpleBootstrap):
         # node 3 -> node 1, node 2
         self._dag = dag
     def get_node(self):
+        cur_node_index = len(self.nodes) - 1 
         ret = []
         try:
             adj_list = self._dag[self._counter]
             for node_index in adj_list:
-                try:
-                    ret.append(self.nodes[node_index])
-                except IndexError:
-                    pass
+                # check input if it is wrong i.e. make servent connect to itself
+                if not node_index == cur_node_index:
+                    try:
+                        ret.append(self.nodes[node_index])
+                    except IndexError:
+                        pass
         except KeyError:
             # if there is no node, return the last connect node
             # the default behavior
@@ -166,14 +169,17 @@ class RandomBootstrap(SimpleBootstrap):
         self._p = p
         
     def get_node(self):
+        if len(self.nodes) < 2:
+            return []
         ret = []
-        for address in self.nodes:
+        # don't get the last node, because it is the current node
+        for x in xrange(0,len(self.nodes)-1):
             if binomial(1, self._p) == 1:
-                ret.append(address)
+                ret.append(self.nodes[x])
         # check to see if it is empty
         if not ret:
             # using default behavior
-            return [self.nodes[randint(0, len(self.nodes))]]
+            return [self.nodes[randint(0, len(self.nodes)-1)]]
         # if not empty, return the node
         return ret
         

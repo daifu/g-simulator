@@ -24,7 +24,7 @@ def main(argv, argc):
     logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
     if argc == 0:
         print "Running with default behavior."
-        print "To see other options, please run with python run_bootstrap help"        
+        print "To see other options, please run with python run_bootstrap.py help"        
         dag = {0: [], 1:[0], 2:[0], 3:[1,2]}
         print "The default is DagBootstrap with %s" % dag
         DagBootstrap(dag)
@@ -39,8 +39,11 @@ def main(argv, argc):
     
     if argv[0] == 'help':
         if argc == 1:
-            # TODO: output three options of bootstrap you can choose
-            pass
+            print "You could run the following Bootstrap: "
+            for bt in bootstrap_table.keys():
+                print "* ", bt
+            print "You can find out how to run any of above Bootstrap by typing: "
+            print "python run_bootstrap.py help <bootstrap name>"
         elif argv[1] == 'SimpleBootstrap':
             # TODO: explain SimpleBootstrap
             pass        

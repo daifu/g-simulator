@@ -12,8 +12,7 @@ try:
     import struct
     import asynchat
     import multiprocessing
-    from subprocess import call
-
+    import numpy    
     print "All system required system package installed."
 except ImportError, e:
     import sys

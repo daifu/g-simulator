@@ -39,4 +39,4 @@ class StatsServent(BasicServent):
         ret = BasicServent.flood_ex(self, message)
         self.num_tx_byte += len(message.serialize())*ret
         return ret
-        
+

@@ -90,6 +90,6 @@ def create_message(message_type, message_id = None, ttl = 7, **kwargs):
                      kwargs['result_set'], 
                      kwargs['servent_id'])
     else:
-        raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
-    
+        raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')    
     return message
+

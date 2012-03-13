@@ -15,7 +15,13 @@ class FileInfo:
         self.file_id = file_id
         self.file_name = file_name
         self.file_size = file_size
-   
+    def get_result_set(self):
+        return {
+            "file_index": self.file_id,
+            "file_name": self.file_name,
+            "file_size": self.file_size
+        }
+
 class BasicServent:
     """
     This class implements everything that a Servent "must do" as part of Gnutella 0.4 protocol

@@ -17,10 +17,10 @@ class FileInfo:
         self.file_size = file_size
     def get_result_set(self):
         return {
-            "file_index": self.file_id,
-            "file_name": self.file_name,
-            "file_size": self.file_size
-        }
+                "file_index": self.file_id,
+                "file_name": self.file_name,
+                "file_size": self.file_size
+                }
 
 class BasicServent:
     # Fixed expire time interval on forwarding
@@ -243,7 +243,8 @@ class BasicServent:
         for t in tokens:
             for fileinfo in self.files:
                 if t in fileinfo.indices:
-                    match.append(fileinfo)                       
+                    if fileinfo not in match:
+                        match.append(fileinfo)
         return match
     
     

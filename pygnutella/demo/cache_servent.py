@@ -12,11 +12,11 @@ class CacheServent(BasicServent):
     query hit servents.
     """
 
-    def __init__(self):
+    def __init__(self, bootstrap_address=None):
         logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
         self.neighbors = {}
         self.cache = []
-        BasicServent.__init__(self)
+        BasicServent.__init__(self, bootstrap_address=bootstrap_address)
 
     def on_connect(self, connection_handler):
         ping_message = create_message(GnutellaBodyId.PING)

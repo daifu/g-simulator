@@ -61,4 +61,18 @@ def test_cache():
     cache_result = test_servent.search_queryhit("C")
     # test the result
     assert_equal(len(cache_result), 1)
-    assert_equal(cache_result[0][3][0]['file_index'], 35345)    
+    assert_equal(cache_result[0][3][0]['file_index'], 35345)
+    # complex test, use two servent
+    servent_id2 = 'thisisserventid1'
+    fake_queryhit3 = create_message(GnutellaBodyId.QUERYHIT,
+                                   ip = ip,
+                                   port = port,
+                                   result_set = result_set,
+                                   servent_id = servent_id2,
+                                   speed = 1)
+    test_servent.save_queryhit(fake_queryhit3)
+    # test if it does not merge
+    assert_equal(len(test_servent.queryhit_cache), 2)
+    # test the result
+    cache_result = test_servent.search_queryhit("A")
+    assert_equal(len(cache_result), 2)

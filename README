@@ -1,3 +1,34 @@
+=======================
+Installation
+=======================
+
+* For one-time user or developers for staging environment, 
+we suggests you should use the following commands at 
+root of project directory:
+
+To install, this command would create symlink to project directory
+for python to know
+> sudo python setup.py develop 
+
+To uninstall i.e. remove the symlink
+> sudo python setup.py develop --uninstall
+
+* For pernament user, this is experimental. Do not try this
+out unless you understand python setuptools.
+
+To install, this would build and install the package into 
+/usr/local/lib/python2.X/dist-packages/ (assuming -nix platform)
+> sudo python setup.py install
+
+To uninstall, python setuptools is pretty bad at this. You need
+to remove the directory pygnutella-X.X-py2.X.egg from
+/usr/local/lib/python2.X/dist-packages/ manually.
+
+* After you install successfully by one of two ways above, now you can
+try our example code of our framework. Look to next section Demo for
+that
+
+=======================
 Demo
 =======================
 
@@ -13,6 +44,7 @@ OR
 Second run servent nodes to build the network. 
 > python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
 
+=======================
 Help commands
 =======================
 
@@ -24,18 +56,6 @@ OR
 > python run_bootstrap.py help RandomBootstrap
 OR
 > python run_bootstrap.py help DagBootstrap
-
-Check required packages
-=======================
-
-Go to the current directory(under g-simulator), and run:
-> python setup.py
-
-It will check all the required packages and install nose if your system does
-not have.
-
-Run all the tests.
-> nosetests
 
 Coding Standard
 =======================
@@ -52,7 +72,8 @@ editor to do so.
 name is too ambiguous
 + use # for comment
 
-How to run the test
+=======================
+How to make and run unit test
 =======================
 
 1. Install nose using setuptools/distribute:
@@ -63,6 +84,7 @@ OR
 
 Or, if you don’t have setuptools/distribute installed, cd to the source
 package(nose-1.1.2), and:
+
 > python setup.py install
 OR
 > sudo python setup.py install

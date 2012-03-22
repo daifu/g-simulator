@@ -1,8 +1,6 @@
 from ..servent import BasicServent
 from ..message import create_message
 from ..messagebody import GnutellaBodyId
-from copy import deepcopy
-from ..utils import dotted_quad_to_num
 import time
 
 class CacheServent(BasicServent):

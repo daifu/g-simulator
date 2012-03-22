@@ -23,6 +23,7 @@ class QueryServent(BasicServent):
                 if results:
                     result_set = [result.get_result_set() for result in results]
                     queryhit_message = create_message(GnutellaBodyId.QUERYHIT,
+                                                      message_id = message.message_id,
                                                       ip = self.reactor.ip,
                                                       port = self.reactor.port,
                                                       speed = 1,

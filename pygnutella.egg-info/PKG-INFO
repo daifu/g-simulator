@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: pygnutella
+Version: 1.0
+Summary: This is Gnutella implementation on top of Python asyncore.
+Home-page: UNKNOWN
+Author: Khai Nguyen, Daifu Ye, Tai Pham
+Author-email: khaing211@gmail.com, daifu.ye@gmail.com, taiducpham@ucla.edu
+License: MIT
+Description: UNKNOWN
+Keywords: gnutella,python,asyncore,pygnutella,p2p,peer-to-peer,peer network
+Platform: UNKNOWN

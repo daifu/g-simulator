@@ -43,10 +43,14 @@ class SimpleBootstrap(asyncore.dispatcher):
         """
         return {}
         
-    def get_node(self):
+    def get_node(self, exclude = []):
         # return the last join node or empty list if _node is empty
         # override this for more elaborate scheme of bootstrap
-        return self.nodes[-2:-1]
+        for node in reversed(self.nodes):
+            for ex in exclude:
+                if not node == ex:
+                    return [node] 
+        return []
 
 
 class BootstrapMethod:
@@ -72,6 +76,7 @@ class BootstrapInHandler(asynchat.async_chat):
         self._bootstrap = bootstrap
         self.set_terminator('\n')
         self._received_data = ''
+        self.exclude = []
 
     def collect_incoming_data(self, data):
         self._received_data += data
@@ -85,10 +90,15 @@ class BootstrapInHandler(asynchat.async_chat):
         method = tokens[0]
         args = tokens[1:]
         if method  == BootstrapMethod.POST:
-            ip, port = args
-            self._bootstrap.add_node((ip, port))
+            if len(args) == 2:
+                ip, port = args
+                address = ip, port
+                self.exclude.append(address)
+                self._bootstrap.add_node(address)
+            else:
+                self._bootstrap.logger.info("POST don't have exact two parameters.")
         elif method == BootstrapMethod.GET:
-            potential_partners = self._bootstrap.get_node()
+            potential_partners = self._bootstrap.get_node(self.exclude)
             for partner in potential_partners:
                 self._bootstrap.logger.info("sent %s %s" % partner)
                 self.push('PEER %s %s\n' % partner)            
@@ -181,7 +191,7 @@ class DagBootstrap(SimpleBootstrap):
             self._dag[k] = [i for i in dag[k] if i < k and i >= 0]
         self.logger.debug("Dag: %s" % self._dag)
         
-    def get_node(self):
+    def get_node(self, exclude=[]):
         ret = []
         try:
             adj_list = self._dag[self._counter]
@@ -191,11 +201,16 @@ class DagBootstrap(SimpleBootstrap):
                 except IndexError:
                     pass
         except KeyError:
-            # if there is no node, return the last connect node
-            # the default behavior
-            return SimpleBootstrap.get_node(self)
+            pass
+        # remove all excluded address        
+        for ex in exclude:
+            if ex in ret:
+                ret.remove(ex)
         # increase node index
-        self._counter += 1
+        self._counter += 1        
+        # if empty list after remove, use default behavior
+        if ret == []:
+            return SimpleBootstrap.get_node(self, exclude)
         return ret
     
     @staticmethod
@@ -204,14 +219,17 @@ class DagBootstrap(SimpleBootstrap):
         This method is use to parse argv from command line
         to create parameter for constructor for the class
         """
-        dag = {}
-        arg = argv[0]
-        adj_lists = arg.split(';')
-        for alist in adj_lists:
-            head, tail = alist.split(':')
-            node_list = tail.split(',')
-            dag[int(head)] = [int(v) for v in node_list]
-        return {'dag': dag}
+        try:
+            dag = {}
+            arg = argv[0]
+            adj_lists = arg.split(';')
+            for alist in adj_lists:
+                head, tail = alist.split(':')
+                node_list = tail.split(',')
+                dag[int(head)] = [int(v) for v in node_list]
+            return {'dag': dag}
+        except:
+            return None
     
 class RandomBootstrap(SimpleBootstrap):
     """
@@ -239,18 +257,21 @@ class RandomBootstrap(SimpleBootstrap):
         self._p = p
         self.logger.debug("p is %s", self._p)
         
-    def get_node(self):
-        if len(self.nodes) < 2:
-            return []
+    def get_node(self, exclude=[]):
         ret = []
-        # don't get the last node, because it is the current node
-        for x in xrange(0,len(self.nodes)-1):
+        # include as many random node as possible
+        for x in xrange(0,len(self.nodes)):
             if binomial(1, self._p) == 1:
                 ret.append(self.nodes[x])
-        # check to see if it is empty
-        if not ret:
+        # remove exclude
+        if ret:
+            for ex in exclude:
+                if ex in ret:
+                    ret.remove(ex)
+        # if empty list after remove, use default behavior
+        if ret == []:          
             # using default behavior
-            return [self.nodes[randint(0, len(self.nodes)-1)]]
+            return SimpleBootstrap.get_node(self, exclude)            
         # if not empty, return the node
         return ret
 
@@ -260,6 +281,8 @@ class RandomBootstrap(SimpleBootstrap):
         This method is use to parse argv from command line
         to create parameter for constructor for the class
         """
-        p = float(argv[0])
-        return {'p': p}   
-            
+        try:
+            p = float(argv[0])
+            return {'p': p}   
+        except:
+            return None

@@ -219,14 +219,17 @@ class DagBootstrap(SimpleBootstrap):
         This method is use to parse argv from command line
         to create parameter for constructor for the class
         """
-        dag = {}
-        arg = argv[0]
-        adj_lists = arg.split(';')
-        for alist in adj_lists:
-            head, tail = alist.split(':')
-            node_list = tail.split(',')
-            dag[int(head)] = [int(v) for v in node_list]
-        return {'dag': dag}
+        try:
+            dag = {}
+            arg = argv[0]
+            adj_lists = arg.split(';')
+            for alist in adj_lists:
+                head, tail = alist.split(':')
+                node_list = tail.split(',')
+                dag[int(head)] = [int(v) for v in node_list]
+            return {'dag': dag}
+        except:
+            return None
     
 class RandomBootstrap(SimpleBootstrap):
     """
@@ -278,6 +281,8 @@ class RandomBootstrap(SimpleBootstrap):
         This method is use to parse argv from command line
         to create parameter for constructor for the class
         """
-        p = float(argv[0])
-        return {'p': p}   
-            
+        try:
+            p = float(argv[0])
+            return {'p': p}   
+        except:
+            return None

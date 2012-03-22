@@ -1,65 +1,23 @@
-#!/usr/bin/env python
+from setuptools import setup, find_packages
+setup(
+    name = "pygnutella",
+    version = "1.0",
+    packages = find_packages(exclude=["tests", "examples"]),
 
-#make sure this file is executable
-#chmod 755 setup.py
-import sys
-from subprocess import call
+    # installed or upgraded on the target machine
+    install_requires = ['asyncore', 
+                        'asynchat',
+                        'multiprocessing', 
+                        'uuid', 
+                        'numpy',
+                        'logging',
+                        'struct',
+                        'socket'],
 
-
-def check():
-    """Check whether the system has all the package or not"""
-    print "Checking all the packages"
-    try:
-        import logging
-        import asyncore
-        import socket
-        import uuid
-        import struct
-        import asynchat
-        import multiprocessing
-        import numpy
-        print "All system required system package installed."
-    except ImportError, e:
-        import sys
-        if sys.version_info <= (2, 7,):
-            print "Please upgrade your python to at least 2.7"
-            print "Python upgrade page: http://www.python.org/download/releases/"
-        else:
-            print e
-
-    print "Checking nose(Testing library)"
-    try:
-        import nose
-        print "Run all unit tests"
-        call('nosetests', shell=True)
-    except Exception, e:
-        print "No nose module, please installing nose: "
-        print "sudo pip install nose OR sudo easy_install nose"
-
-def uninstall():
-    """Uninstall the nose package"""
-    print "Uninstalling nose pacakge, it might require admin permission."
-    print "Running pip uninstall nose"
-    try:
-        re = call("pip uninstall nose", shell=True)
-        if re == 0:
-            print "Done!"
-    except Exception, e:
-        raise e
-
-def main(argv):
-    if len(argv) == 0:
-        print "Missing arguments."
-        print "Usage: python setup.py [check|uninstall]"
-        return
-    if argv[0] == "check":
-        check()
-    elif argv[0] == "uninstall":
-        uninstall()
-    else:
-        print "Unknown arguments."
-        print "Usage: python setup.py [check|uninstall]"
-        return
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
+    # metadata for upload to PyPI
+    author = "Khai Nguyen, Daifu Ye, Tai Pham",
+    author_email = "khaing211@gmail.com, daifu.ye@gmail.com, taiducpham@ucla.edu",
+    description = "This is Gnutella implementation on top of Python asyncore.",
+    license = "MIT",
+    keywords = "gnutella, python, asyncore, pygnutella, p2p, peer-to-peer, peer network",
+)

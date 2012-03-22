@@ -12,7 +12,7 @@ class CacheServent(BasicServent):
         BasicServent.__init__(self, bootstrap_address=bootstrap_address)
         
     def on_receive(self, connection_handler, message):
-        if message.message_id == GnutellaBodyId.QUERYHIT:
+        if message.payload_descriptor == GnutellaBodyId.QUERYHIT:
             self.save_queryhit(message)
         elif message.payload_descriptor == GnutellaBodyId.QUERY:
             forward_key = (message.message_id, GnutellaBodyId.QUERYHIT)

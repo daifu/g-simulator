@@ -5,14 +5,10 @@ setup(
     packages = find_packages(exclude=["tests", "examples"]),
 
     # installed or upgraded on the target machine
-    install_requires = ['asyncore', 
-                        'asynchat',
-                        'multiprocessing', 
-                        'uuid', 
-                        'numpy',
-                        'logging',
-                        'struct',
-                        'socket'],
+    # other packages are asyncore, asynchat, multiprocessing, uuid, struct, socket 
+    # are Python standard libraries
+    # http://docs.python.org/library/
+    install_requires = ['numpy'],
 
     # metadata for upload to PyPI
     author = "Khai Nguyen, Daifu Ye, Tai Pham",

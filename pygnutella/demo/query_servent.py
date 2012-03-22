@@ -26,7 +26,8 @@ class QueryServent(BasicServent):
                                                       ip = self.reactor.ip,
                                                       port = self.reactor.port,
                                                       speed = 1,
-                                                      result_set = result_set)
+                                                      result_set = result_set,
+                                                      servent_id = self.id)
                     # send back the result
                     self.send_message(queryhit_message, connection_handler)
         # use default behavior

@@ -9,7 +9,7 @@ class CacheServent(BasicServent):
         self.queryhit_cache = []
         self.hits = 0
         self.misses = 0
-        BasicServent.__init__(self, bootstrap_address)
+        BasicServent.__init__(self, bootstrap_address=bootstrap_address)
         
     def on_receive(self, connection_handler, message):
         if message.message_id == GnutellaBodyId.QUERYHIT:

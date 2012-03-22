@@ -32,31 +32,28 @@ that
 Demo
 =======================
 
-First start up bootstrap node
-> python run_bootstrap.py
-OR
-> python run_bootstrap.py SimpleBootstrap
-OR
-> python run_bootstrap.py RandomBootstrap <probability from 0 to 1>
-OR
-> python run_bootstrap.py DagBootstrap <an adjacent list string>
+Inside "examples" directory, each python script is a separate example.
+If the example is large, it puts into a directory of its own include
+with is own README for running it.
 
-Second run servent nodes to build the network. 
-> python run_servent.py <bootstrap_ip> <bootstrap_port> <num of node>
+Each example is designed to demo a part of framework i.e. showing
+how to use the framework. Once you successfully installed
+the package, you can run the example with ease in a terminal.
+
+For example, you can run simple_cache_example.py:
+> cd examples
+> python simple_cache_example.py
+
+To further you understanding of pygnutella framework, please
+look at next section Framework Design.
 
 =======================
-Help commands
+Framework Design
 =======================
 
-Help commands on different bootstraping:
-> python run_bootstrap.py help
-OR
-> python run_bootstrap.py help SimpleBootstrap
-OR
-> python run_bootstrap.py help RandomBootstrap
-OR
-> python run_bootstrap.py help DagBootstrap
+Please look into report.pdf that comes with this.
 
+=======================
 Coding Standard
 =======================
 

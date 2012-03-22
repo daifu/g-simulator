@@ -91,7 +91,7 @@ class BasicServent:
                                               port = self.reactor.port,
                                               num_of_files = self.num_files,
                                               num_of_kb = self.num_kilobytes)
-                self.log("in receive ping, sending %s", pong_message)
+                self.log("Sending replied pong %s", pong_message)
                 self.send_message(pong_message, connection_handler)
         elif message.payload_descriptor == GnutellaBodyId.PONG:
             # forwarding pong                 

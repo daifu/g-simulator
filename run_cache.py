@@ -35,12 +35,11 @@ def main(args):
         scheduler_loop(timeout=1,count=10)
     finally:
         #flood is query to neighbors
-        servent1.query_flood('first file')
+        servent1.search_queryhit('first file')
         scheduler_loop(timeout=1,count=10)
-        print "============NEXT QUERY============"
-        # servent2.query_flood('first file')
+        # servent2.search_queryhit('first file')
         # scheduler_loop(timeout=1,count=10)
-        servent5.query_flood('first file')
+        servent5.search_queryhit('first file')
         scheduler_loop(timeout=1,count=15)
         close_all()
 

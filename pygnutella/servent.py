@@ -6,11 +6,6 @@ from message import create_message
 
 # struct of file, each servent have an array/list of these files
 class FileInfo:
-    file_id = 0
-    file_name =  ""
-    # file_size assumed to be in unit of byte
-    file_size = 0
-    indices = []
     def __init__(self, file_id, file_name, file_size):
         self.indices = file_name.split()
         self.file_id = file_id
@@ -268,14 +263,13 @@ class BasicServent:
 
     def search(self, criteria):
         """ 
-        return a list of file fit the criteria
+        Return a list of file fit the criteria
+        Exact match for file name
         """
-        tokens = criteria.split()
         match = []
-        for t in tokens:
-            for fileinfo in self.files:
-                if t in fileinfo.indices:
-                    match.append(fileinfo)                       
+        for fileinfo in self.files:
+            if criteria == fileinfo.file_name:
+                match.append(fileinfo)                       
         return match
     
     

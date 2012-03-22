@@ -2,16 +2,25 @@ import asyncore
 import asynchat
 import socket
 import logging
+from numpy.random import binomial, randint
 
 class SimpleBootstrap(asyncore.dispatcher):
-    nodes = []
+    """
+    SimpleBootstrap
     
-    def __init__(self, port = 0):
-        self.logger = logging.getLogger("Bootstrap") 
+    A new node simply connects to the last node posted ip/addr
+    
+    Example:
+    python run_bootstrap.py SimpleBootstrap    
+    """
+    
+    def __init__(self):
+        self.nodes = []
+        self.logger = logging.getLogger(self.__class__.__name__) 
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind socket to a public ip (not localhost or 127.0.0.1)
-        self.bind((socket.gethostname(), port))
+        self.bind((socket.gethostname(), 0))
         # get socket address for future use
         self.addr = self.socket.getsockname()
         self.logger.info("address at %s %s" % (self.addr))        
@@ -25,6 +34,14 @@ class SimpleBootstrap(asyncore.dispatcher):
 
     def add_node(self, address):
         self.nodes.append(address)
+
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        return {}
         
     def get_node(self):
         # return the last join node or empty list if _node is empty
@@ -125,7 +142,27 @@ class BootstrapOutHandler(asynchat.async_chat):
         
 class DagBootstrap(SimpleBootstrap):
     """
-    This is DAG (directly asyclic graph) bootstrap
+    DagBootstrap
+    
+    This is DAG (directly asyclic graph) bootstrap.
+    You can pass in a DAG to tell how the node connects to each
+    other initially. If it does not specific,
+    then that node simply connected to last node posted ip/port
+    to bootstrap
+    
+    An adjacent list is specified as follow
+    + a semi-colon denote separation list
+    + a colon than sign denote mapping
+    + a coma denote separation of node inside a list, but not last node
+    + space is not important
+    + order is not important
+    + repetition will result in override and last copy is the list\n\
+    
+    Example: 
+    python run_bootstrap.py DagBootstrap '3 : 1, 2; 1:0; 2:1,0; 3: 0'
+    
+    result in
+    Adjacency list {1: [0], 2: [1,0], 3: [0]}
     """
     def __init__(self, dag=[]):
         SimpleBootstrap.__init__(self)
@@ -138,7 +175,12 @@ class DagBootstrap(SimpleBootstrap):
         # node 1 -> node 0
         # node 2 -> node 0, also could include node 1 too
         # node 3 -> node 1, node 2
-        self._dag = dag
+        # parameter check
+        self._dag = {}
+        for k in dag.keys():
+            self._dag[k] = [i for i in dag[k] if i < k and i >= 0]
+        self.logger.debug("Dag: %s" % self._dag)
+        
     def get_node(self):
         ret = []
         try:
@@ -155,3 +197,69 @@ class DagBootstrap(SimpleBootstrap):
         # increase node index
         self._counter += 1
         return ret
+    
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        dag = {}
+        arg = argv[0]
+        adj_lists = arg.split(';')
+        for alist in adj_lists:
+            head, tail = alist.split(':')
+            node_list = tail.split(',')
+            dag[int(head)] = [int(v) for v in node_list]
+        return {'dag': dag}
+    
+class RandomBootstrap(SimpleBootstrap):
+    """
+    RandomBootstrap
+    
+    RandomBootstrap will take an input between 0.0 and 1.0 exclusive
+    for probability to determine a node address should
+    be included into the request ip. RandomBootstrap
+    will always guarantee to return at least one address
+    for bootstrap to prevent network partition.
+    
+    Example: 
+    for p = 0.7, 
+    
+    python run_bootstrap.py RandomBootstrap 0.7
+    """
+    def __init__(self, p):
+        """
+        p is a probability of selecting a node
+        """
+        SimpleBootstrap.__init__(self)
+        if p >= 1.:
+            self.logger.debug("p is larger than or equal to 1, change p to 0.5")
+            p = 0.5
+        self._p = p
+        self.logger.debug("p is %s", self._p)
+        
+    def get_node(self):
+        if len(self.nodes) < 2:
+            return []
+        ret = []
+        # don't get the last node, because it is the current node
+        for x in xrange(0,len(self.nodes)-1):
+            if binomial(1, self._p) == 1:
+                ret.append(self.nodes[x])
+        # check to see if it is empty
+        if not ret:
+            # using default behavior
+            return [self.nodes[randint(0, len(self.nodes)-1)]]
+        # if not empty, return the node
+        return ret
+
+    @staticmethod
+    def parse(argv):
+        """
+        This method is use to parse argv from command line
+        to create parameter for constructor for the class
+        """
+        p = float(argv[0])
+        return {'p': p}   
+            

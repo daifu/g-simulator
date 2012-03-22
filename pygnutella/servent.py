@@ -1,4 +1,5 @@
-import logging, random, uuid, copy, time
+import logging, uuid, copy, time
+from numpy.random import binomial
 from reactor import Reactor
 from messagebody import GnutellaBodyId
 from message import create_message
@@ -15,6 +16,7 @@ class FileInfo:
         self.file_id = file_id
         self.file_name = file_name
         self.file_size = file_size
+        
     def get_result_set(self):
         return {
                 "file_index": self.file_id,
@@ -23,13 +25,18 @@ class FileInfo:
                 }
 
 class BasicServent:
-    # Fixed expire time interval on forwarding
-    # in unit of second
+    """
+    This class implements everything that a Servent "must do" as part of Gnutella 0.4 protocol
+    
+    To add more feature, simply derive this. You can either override entire method or
+    add more functionality by implement it and then add parent's method.
+    """
+    # Fixed expiration period  per ttl in unit of second
     FIXED_EXPIRED_INTERVAL = 5
     def __init__(self, port=0, files = [], bootstrap_address = None):
         self._logger = logging.getLogger("%s(%s)" % (self.__class__.__name__, hex(id(self))[:-1]))        
         # forwarding table: (message_id, payload_type) -> (connection_handler,
-        # timestamp), it is for flood()
+        # expiration)
         self.forwarding_table = {}
         # flood/forward ignore table: message_id -> timestamp
         # this table used to prevent loop in flood
@@ -73,9 +80,11 @@ class BasicServent:
         """
         if message.payload_descriptor == GnutellaBodyId.PING:
             # check if we saw this ping before. If not, then process
-            not_in_forwarding_table = (message.message_id, GnutellaBodyId.PONG) not in self.forwarding_table
-            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time()) 
-            if  not_in_forwarding_table and not_ignore_or_expire:                                 
+            forward_key = (message.message_id, GnutellaBodyId.PONG)
+            now = time.time()
+            not_seen_or_expire = forward_key not in self.forwarding_table or (self.forwarding_table[forward_key][1] < now)
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < now) 
+            if  not_seen_or_expire and not_ignore_or_expire:                                 
                 # send Ping to any neighbor that not the one servent recceived the Ping from
                 self.flood(connection_handler, message)
                 # add ping to forwarding table to forward PONG
@@ -95,9 +104,11 @@ class BasicServent:
             self.forward(message)
         elif message.payload_descriptor == GnutellaBodyId.QUERY:
             # check if we saw this query before. If not, then process
-            not_in_forwarding_table = (message.message_id, GnutellaBodyId.QUERYHIT) not in self.forwarding_table
-            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < time.time())            
-            if not_in_forwarding_table and not_ignore_or_expire:
+            forward_key = (message.message_id, GnutellaBodyId.QUERYHIT)
+            now = time.time()
+            not_seen_or_expire = forward_key not in self.forwarding_table or (self.forwarding_table[forward_key][1] < now)
+            not_ignore_or_expire = message.message_id not in self.ignore or (self.ignore[message.message_id] < now)             
+            if not_seen_or_expire and not_ignore_or_expire:
                 # add to forwarding table to forward QUERYHIT
                 self.put_into_forwarding_table(message, connection_handler)
                 # forward query packet to neighbor servent
@@ -123,7 +134,7 @@ class BasicServent:
         """
         # resource clean up
         # clean up forwarding table
-        remove = [k for k,v in self.forwarding_table.iteritems() if v == connection_handler]
+        remove = [k for k,v in self.forwarding_table.iteritems() if v[0] == connection_handler]
         for k in remove: 
             del self.forwarding_table[k]
         return
@@ -140,13 +151,20 @@ class BasicServent:
         self._logger.debug(msg, *args, **kwargs)
     
     def send_message(self, message, handler):
+        """
+        Servent sends its own message (not as part of flood / forwarding)
+        
+        By using this method, Servent can keep track which message (by message_id) is its own
+        by adding it to ignore dictionary.
+        """
         if message.payload_descriptor == GnutellaBodyId.QUERY or message.payload_descriptor == GnutellaBodyId.PING:
             self.ignore[message.message_id] = time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl
         handler.write(message.serialize())
     
     def put_into_forwarding_table(self, message, handler):
+        now = time.time()
         message_id = copy.deepcopy(message.message_id)
-        value = (handler, time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl)
+        value = (handler, now+self.FIXED_EXPIRED_INTERVAL*message.ttl)
         key = None
         if message.payload_descriptor == GnutellaBodyId.QUERYHIT:
             key = (message_id, message.body.servent_id, GnutellaBodyId.PUSH)            
@@ -191,16 +209,31 @@ class BasicServent:
         return False 
             
     
-    def flood(self, connection_handler, message):
+    def flood(self, received_handler, message):
         """
-        Flood message to every directly connected servent
+        Flood other servent's message to every directly connected servent other
+        than the received handler. This method is used as part of forwarding of ping, query
+        
+        return number of connection is flooded
         """
         if message.ttl < 2:
-            return
+            return 0
         # create a deep copy
         message = copy.deepcopy(message)        
         message.decrease_ttl()
-        return self.reactor.broadcast_except_for(connection_handler, message)
+        return self.reactor.broadcast_except_for(received_handler, message)
+
+    def flood_ex(self, message):
+        """
+        Flood your own message to every directly connected servent
+
+        return number of connection is flooded
+        """
+        # you can only flood query or ping message by definition of protocol
+        if message.payload_descriptor == GnutellaBodyId.QUERY or message.payload_descriptor == GnutellaBodyId.PING:
+            self.ignore[message.message_id] = time.time()+self.FIXED_EXPIRED_INTERVAL*message.ttl
+            return self.reactor.broadcast_except_for(None, message)
+        return 0
            
     def set_files(self, files):
         # each member of files is a FileInfo 
@@ -259,7 +292,7 @@ class RandomWalkServent(BasicServent):
         packet = message.serialize()
         for handler in self.reactor.channels:
             if not handler == connection_handler:
-                if random.randint(0, 10) & 1:
+                if binomial(1, 0.5) == 1:
                     handler.write(packet)
 
 class SilentServent(BasicServent):

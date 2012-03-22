@@ -52,9 +52,12 @@ class PingBody(IMessageBody):
         self.message.payload_descriptor = GnutellaBodyId.PING
         return
 
-    def serialize(self):
+    def __repr__(self):
         return ''
 
+    def serialize(self):
+        return ''
+    
     def deserialize(self, raw_data):
         return 0
 
@@ -76,6 +79,9 @@ class PongBody(IMessageBody):
         # 4 byte for number of kilobytes shared
         self.__length = 2+4+4+4
         return
+
+    def __repr__(self):
+        return "ip=%s, port=%s, num_of_file=%s, num_of_kb=%s" % (self.ip, self.port, self.num_of_files, self.num_of_kb)
 
     def serialize(self):
         assert self.ip != None
@@ -107,6 +113,9 @@ class PushBody(IMessageBody):
         self.fmt = "!16sILH"
         return
 
+    def __repr__(self):
+        return 'servent_id=%s, ip=%s, port=%s, file_index=%s' % (self.servent_id, self.ip, self.port, self.file_index) 
+
     def serialize(self):
         assert self.servent_id != None
         assert self.file_index != None
@@ -136,6 +145,9 @@ class QueryBody(IMessageBody):
         self.fmt = ""
         return
 
+    def __repr__(self):
+        return 'min_speed=%d, search_criteria=%s' % (self.min_speed, self.search_criteria)
+
     def serialize(self):
         assert self.min_speed != None
         assert self.search_criteria != None
@@ -157,9 +169,9 @@ class QueryHitBody(IMessageBody):
     Query hit body includes number of hits, port, ip address, speed, result
     set, servent identifier.
     
-    Result set include file index, file size, and file name
+    Result set is a list of result of dictionary with keys: file_index, file_size, and file_name
     """
-    def __init__(self, message, num_of_hits = None, ip = None, port = None, speed = None, result_set = None, servent_id = None):
+    def __init__(self, message, ip = None, port = None, speed = None, result_set = [], servent_id = None):
         IMessageBody.__init__(self, message)
         self.message.payload_descriptor = GnutellaBodyId.QUERYHIT
         self.ip = ip
@@ -167,11 +179,13 @@ class QueryHitBody(IMessageBody):
         self.speed = speed
         self.result_set = result_set
         self.servent_id = servent_id
-        self.num_of_hits = num_of_hits
+        self.num_of_hits = len(result_set)
         return
 
+    def __repr__(self):
+        return 'ip=%s, port=%s, speed=%s, servent_id=%s, result_set(%s)=%s' % (self.ip, self.port, self.speed, self.servent_id, self.num_of_hits, self.result_set)
+
     def serialize(self):
-        assert self.num_of_hits != None
         assert self.ip != None
         assert self.port != None
         assert self.speed != None

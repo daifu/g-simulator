@@ -47,6 +47,7 @@ class Message:
             raise ValueError
         # shorten the raw_data to body
         raw_data = raw_data[self.HEADER_LENGTH:]
+        # if check raw_data has enough data for payload
         if len(raw_data) < self.payload_length:
             return None
         # deserialize the body
@@ -60,9 +61,11 @@ class Message:
             self.body = QueryBody(self)
         elif self.payload_descriptor == GnutellaBodyId.QUERYHIT:
             self.body = QueryHitBody(self)
+        else:
+            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
         # final check if deserialize correctly with payload_length given in the header
         if self.body.deserialize(raw_data[:self.payload_length]) == None:
-            raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
+            raise ValueError("body should be able to deserialize")
         return self.payload_length + self.HEADER_LENGTH
     
     def __repr__(self):        
@@ -79,14 +82,13 @@ def create_message(message_type, message_id = None, ttl = 7, **kwargs):
     elif message_type == GnutellaBodyId.QUERY:
         QueryBody(message, kwargs['min_speed'], kwargs['search_criteria'])
     elif message_type == GnutellaBodyId.QUERYHIT:
-        QueryHitBody(message, 
-                     kwargs['num_of_hits'], 
+        QueryHitBody(message,
                      kwargs['ip'], 
                      kwargs['port'], 
                      kwargs['speed'], 
                      kwargs['result_set'], 
                      kwargs['servent_id'])
     else:
-        raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')
-    
+        raise ValueError('message type is not one of PING, PONG, QUERY, QUERYHIT, PUSH')    
     return message
+

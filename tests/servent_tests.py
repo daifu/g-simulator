@@ -10,6 +10,7 @@ class SendServent(BasicServent):
         self.receive_message = []
         self.sent_message = []
         BasicServent.__init__(self)
+
     def on_connect(self, connection_handler):
         ping_message = create_message(GnutellaBodyId.PING)
         self.sent_message.append(ping_message)
@@ -82,3 +83,4 @@ def test_servent():
         assert_equal(send_servent.receive_message[0].body.num_of_files, 3)
         assert_equal(send_servent.receive_message[0].body.num_of_kb, 8)
         close_all()
+

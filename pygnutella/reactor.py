@@ -247,8 +247,8 @@ class ServerHandler(ConnectionHandler):
                     break
         except ValueError:
             # The message stream is messed up
-            self.reactor.servent.log("Message stream is messed up, check deserialize()")
-            self.handle_close()
+            self.reactor.servent.log("Mesage stream is messed up")
+            self.handle_close()        
                 
     def _download(self):
         if not self._received_download_request and '\r\n\r\n' in self.received_data:
@@ -332,7 +332,7 @@ class GnutellaClientHandler(ConnectionHandler):
                     break
         except ValueError:
             # The message stream is messed up
-            self.reactor.servent.log("Message stream is messed up, check deseralize()")
+            self.reactor.servent.log("Mesage stream is messed up")
             self.handle_close()
     
     def handle_close(self):

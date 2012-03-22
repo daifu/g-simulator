@@ -2,6 +2,7 @@
 
 #make sure this file is executable
 #chmod 755 setup.py
+import sys
 
 print "Checking all the packages"
 try:
@@ -12,8 +13,7 @@ try:
     import struct
     import asynchat
     import multiprocessing
-    from subprocess import call
-
+    import numpy    
     print "All system required system package installed."
 except ImportError, e:
     import sys

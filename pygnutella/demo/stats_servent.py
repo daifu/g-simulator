@@ -1,6 +1,6 @@
 from ..servent import BasicServent
 
-class LogServent(BasicServent):    
+class StatsServent(BasicServent):    
     def __init__(self, port = 0, files = [], bootstrap_address = None):
         BasicServent.__init__(self, port, files, bootstrap_address)
         self.num_requested_conn = 0
@@ -33,5 +33,10 @@ class LogServent(BasicServent):
     def flood(self, connection_handler, message):
         ret = BasicServent.flood(self, connection_handler, message) 
         self.num_tx_byte += len(message.serialize())*ret
-        return ret        
-        
+        return ret
+
+    def flood_ex(self, message):
+        ret = BasicServent.flood_ex(self, message)
+        self.num_tx_byte += len(message.serialize())*ret
+        return ret
+

@@ -12,7 +12,7 @@ class CacheServent(BasicServent):
         BasicServent.__init__(self, bootstrap_address=bootstrap_address)
         
     def on_receive(self, connection_handler, message):
-        if message.message_id == GnutellaBodyId.QUERYHIT:
+        if message.payload_descriptor == GnutellaBodyId.QUERYHIT:
             self.save_queryhit(message)
         elif message.payload_descriptor == GnutellaBodyId.QUERY:
             forward_key = (message.message_id, GnutellaBodyId.QUERYHIT)
@@ -49,7 +49,7 @@ class CacheServent(BasicServent):
                                                           result_set = match[3],
                                                           servent_id = match[0])
                         # send back the result
-                        self.send_message(queryhit_message, connection_handler)
+                        self.send_message(queryhit_message, connection_handler)                    
                     # if we found in cache, just don't use default behavior
                     return
         # use default behavior

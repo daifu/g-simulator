@@ -23,9 +23,11 @@ class QueryServent(BasicServent):
                 queryhit_message = create_message(GnutellaBodyId.QUERYHIT,
                                                   ip = self.reactor.ip,
                                                   port = self.reactor.port,
-                                                  speed = 10, # TODO: how do you know what speed?
+                                                  speed = 1,
                                                   result_set = result_set)
                 # send back the result
                 self.send_message(queryhit_message, connection_handler)
+        # use default behavior
+        BasicServent.on_receive(self, connection_handler, message)
             
 

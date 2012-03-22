@@ -38,7 +38,7 @@ def check():
 
 def uninstall():
     """Uninstall the nose package"""
-    print "Uninstalling nose pacakge"
+    print "Uninstalling nose pacakge, it might require admin permission."
     print "Running pip uninstall nose"
     try:
         re = call("pip uninstall nose", shell=True)

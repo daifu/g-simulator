@@ -73,7 +73,6 @@ def test_QueryHitBody():
             'file_name': 'b_name'
         }]
     servent_id = 'thisisservent_id'
-    num_of_hits = len(result_set)
     query_hit = QueryHitBody(message, ip, port, speed, result_set, servent_id)
     assert_equal(query_hit.message, message)
     assert_equal(query_hit.ip, ip)

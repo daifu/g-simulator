@@ -76,6 +76,12 @@ def main(args):
         close_all()
         return
     
+    print "Servent 1's cache hits: ", servent1.hits, "cache misses", servent1.misses
+    print "Servent 2's cache hits: ", servent2.hits, "cache misses", servent2.misses
+    print "Servent 3's cache hits: ", servent3.hits, "cache misses", servent3.misses
+    print "Servent 4's cache hits: ", servent4.hits, "cache misses", servent4.misses
+    print "Servent 5's cache hits: ", servent5.hits, "cache misses", servent5.misses
+    
     # clean up
     close_all()
         

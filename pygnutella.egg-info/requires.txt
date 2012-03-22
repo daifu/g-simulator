@@ -1,8 +1,1 @@
-asyncore
-asynchat
-multiprocessing
-uuid
 numpy
-logging
-struct
-socket

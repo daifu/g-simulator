@@ -8,7 +8,9 @@ if __name__ == '__main__':
     servent2 = BasicServent()
     servent2.reactor.gnutella_connect((servent1.reactor.address))
     try:
-        scheduler_loop()
+        scheduler_loop(timeout=1, count=10)
+    except:
+        pass
     finally:
         # clean up
         close_all()

@@ -5,9 +5,10 @@ from pygnutella.scheduler import loop as scheduler_loop, close_all
 # Implement more advance selecting which node for partner candidate
 
 class AdvanceBootstrap(SimpleBootstrap):
-    def get_node(self):
+    def get_node(self, exclude=[]):
         # for now it is simple, return all existing node in the system
-        return self.nodes
+        ret = [v for v in self.nodes if v not in exclude]            
+        return ret
 
 #Expected Output
 #Node 1:  [('127.0.1.1', '3435')]

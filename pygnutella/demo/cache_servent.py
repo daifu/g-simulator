@@ -64,7 +64,7 @@ class CacheServent(BasicServent):
                 break
         if match_servent:
             # merge the result_set in message with current files_list we have on the servent
-            files_list = match_servent[4]
+            files_list = match_servent[3]
             for queried_result in message.body.result_set:
                 if queried_result not in files_list:
                     files_list.append(queried_result)
